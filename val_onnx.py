@@ -22,10 +22,8 @@ start_time = time.time()
 x = random.randint(1, 1000)
 print(x)
 # paths = glob.glob(args.data_path+"/test/image/*.*")[0:-1]
-# paths = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant/*.*")
 paths = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")
 # paths = glob.glob("/mnt/algo_storage_server/UNet/Dataset/data/test/image/*.*")
-# paths = glob.glob("/mnt/algo_storage_server/ScanSceneClassification/dataset/test/intra/*.*")[x:x + 100]
 
 result_path = './onnx'
 # result_path = '/mnt/algo_storage_server/UNet/Dataset/data/onnx—predict/'

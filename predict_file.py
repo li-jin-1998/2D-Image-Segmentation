@@ -32,7 +32,6 @@ def main():
     x = random.randint(1, 1000)
     print(x)
     predict_image_names = glob.glob("data/test/image/*.*")
-    # predict_image_names = glob.glob("/mnt/algo_storage_server/ScanSceneClassification/dataset/test/intra/*.*")[x:x + 200]
     result_path="./data/test/predict"
     shutil.rmtree(result_path)
     os.mkdir(result_path)

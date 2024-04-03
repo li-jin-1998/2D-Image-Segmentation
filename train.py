@@ -1,8 +1,5 @@
 import os
 
-from lion_pytorch import Lion
-from torchsummary import summary
-
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import time
@@ -53,8 +50,6 @@ def train():
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr)
-    # optimizer = Lion(params_to_optimize, lr=args.lr)
-    # optimizer = AdaBound(params_to_optimize, lr=args.lr, final_lr=0.1, gamma=0.1)
     # optimizer = torch.optim.SGD(params_to_optimize,lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None

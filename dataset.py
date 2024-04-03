@@ -90,12 +90,9 @@ def compute_weights(masks_path):
 
 
 def main():
-    # data = np.load("data/train/masks.npy")
-    # print(data.shape)
     dataset = MyDataset("data/train", 192)
     data = DataLoader(dataset, batch_size=1, shuffle=True)
     for i, j in data:
-        # print(type(i),type(j))
         print(i.shape, j.shape)
         print(np.min(i.numpy()), np.max(i.numpy()))
         print(np.min(j.numpy()), np.max(j.numpy()))

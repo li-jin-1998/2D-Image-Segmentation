@@ -19,7 +19,6 @@ def model_test():
     num_classes = args.num_classes + 1
 
     val_dataset = MyDataset(args.data_path+"/test", args.image_size)
-    # val_dataset = MyDataset("Final_test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     val_loader = torch.utils.data.DataLoader(val_dataset,

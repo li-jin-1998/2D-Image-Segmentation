@@ -44,9 +44,7 @@ def main():
     # predict_image_names = glob.glob(args.data_path + "/augmentation/image/*.*")[x:x + 200]
     predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/1/*.*")
-    # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset5/data/train/image/*.*")
     result_path = './visualization'
-    # result_path = '/mnt/algo_storage_server/UNet/Dataset/implant_2_result'
     if os.path.exists(result_path):
         shutil.rmtree(result_path)
     os.mkdir(result_path)
@@ -67,20 +65,8 @@ def main():
             img2 = torch.Tensor(original_img2)
             img2 = img2.permute(2, 0, 1)
             img2 = torch.unsqueeze(img2, dim=0)
-            # original_img = Image.open(img_path).convert('RGB')
-            # # print(np.array(original_img).shape,original_img2.shape)
-            # original_predict_image = copy.deepcopy(original_img)
-            # original_width, original_height = original_img.size
-            # original_img = preprocessing(original_img, args.image_size)
-            # img = torch.Tensor(original_img)
-            # img = img.permute(2, 0, 1)
-            # img = torch.unsqueeze(img, dim=0)
 
             output = model(img2.to(device))
-            # print((output['out'][0, :, 1, 1]))
-            # output2 = model(img2.to(device))
-            # print((output2['out'][0, :, 1, 1]))
-            # exit(0)
             prediction = output['out'].argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)
@@ -88,11 +74,8 @@ def main():
             dst = os.path.join(result_path, os.path.splitext(os.path.basename(img_path))[0] + "_predict.png")
             cv2.imwrite(dst, predict_result)
 
-            # cv2.imwrite(dst.replace('predict', ' image'), original_img)
             shutil.copy(str(img_path), dst.replace('predict', ' image'))
-            # mask_path = img_path.replace("image", "mask")
-            # if os.path.exists(mask_path):
-            #     shutil.copy(str(mask_path), dst.replace('predict', 'mask'))
+
     total_time = time.time() - start_time
     print("time {}s, fps {}".format(total_time, len(predict_image_names) / total_time))
 
