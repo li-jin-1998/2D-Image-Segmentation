@@ -12,17 +12,16 @@ import numpy as np
 from PIL import Image
 
 from preprocess import preprocessing, COLORS
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model, get_device
 
 
 def main():
     args = parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("using {} device.".format(device))
+    device = get_device()
 
     # create model
-    model = getModel(args)
+    model = get_model(args)
     weights_path = "./save_weights/{}_best_model.pth".format(args.arch)
     # load weights
     print(weights_path)
@@ -60,10 +59,7 @@ def main():
             img = torch.unsqueeze(img, dim=0)
 
             output = model(img.to(device))
-            # print((output['out'][0, :, 1, 1]))
-            # output2 = model(img2.to(device))
-            # print((output2['out'][0, :, 1, 1]))
-            # exit(0)
+
             prediction = output['out'].argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)

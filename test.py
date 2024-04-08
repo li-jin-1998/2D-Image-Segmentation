@@ -1,6 +1,6 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import time
 import datetime
@@ -8,7 +8,7 @@ import torch
 
 from utils.train_and_eval import evaluate
 from dataset import MyDataset
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model
 
 
 def model_test():
@@ -16,7 +16,7 @@ def model_test():
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     batch_size = args.batch_size
-    num_classes = args.num_classes + 1
+    num_classes = args.num_classes
 
     val_dataset = MyDataset(args.data_path+"/test", args.image_size)
 
@@ -25,7 +25,7 @@ def model_test():
                                              batch_size=batch_size,
                                              num_workers=num_workers,
                                              pin_memory=True)
-    model = getModel(args)
+    model = get_model(args)
     weights_path = "save_weights/{}_best_model.pth".format(args.arch)
     print(weights_path)
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])

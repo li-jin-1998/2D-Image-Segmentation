@@ -44,7 +44,7 @@ def metrics_plot(arg, name, *args):
 
 
 if __name__ == '__main__':
-    from parse_args import parse_args, getModel
+    from parse_args import parse_args, get_model
 
     args = parse_args()
     args.epochs = 5

@@ -10,11 +10,11 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 import onnxruntime
 import numpy as np
 import tqdm
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model
 
 # Load ONNX model
 args = parse_args()
-getModel(args)
+get_model(args)
 onnx_file_name = "./save_weights/{}_best_model.onnx".format(args.arch)
 # onnx_file_name = "./save_weights/{}_optimize.onnx".format(args.arch)
 session = onnxruntime.InferenceSession(onnx_file_name)

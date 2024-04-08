@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 
 from preprocess import preprocessing, COLORS
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     print("using {} device.".format(device))
 
     # create model
-    model = getModel(args)
+    model = get_model(args)
     weights_path = "./save_weights/{}_best_model.pth".format(args.arch)
     # load weights
     print(weights_path)

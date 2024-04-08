@@ -8,7 +8,7 @@ import torch
 
 from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
 from dataset import MyDataset
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model
 
 
 def train():
@@ -38,7 +38,7 @@ def train():
                                              num_workers=num_workers,
                                              pin_memory=True)
 
-    model = getModel(args)
+    model = get_model(args)
     # for k, v in model.named_parameters():
     #     # print("当前参数名称 {}".format(k))
     #     v.requires_grad = True

@@ -13,11 +13,11 @@ import warnings
 import onnx
 import onnxoptimizer as optimizer
 # from onnx import optimizer
-from parse_args import parse_args, getModel
+from parse_args import parse_args, get_model
 
 # Load ONNX model
 args = parse_args()
-getModel(args)
+get_model(args)
 onnx_file_name = "./save_weights/{}_best_model.onnx".format(args.arch)
 output_name = "./save_weights/{}_optimize.onnx".format(args.arch)
 

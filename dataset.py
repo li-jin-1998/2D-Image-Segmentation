@@ -10,32 +10,7 @@ import PIL.Image
 
 torch.manual_seed(3407)
 
-from preprocess import pre_process, pre_process2
-
-
-def preprocessing(image, mask, image_size):
-    image = image.resize((image_size, image_size),
-                         PIL.Image.BILINEAR)
-    mask = mask.resize((image_size, image_size),
-                       PIL.Image.NEAREST)
-    # 使用双边滤波处理图像
-    # image = image.filter(ImageFilter.SMOOTH_MORE)
-    # image.show()
-    # image1.show()
-    # exit(0)
-    # image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    # image = cv2.bilateralFilter(image, 2, 50, 50)  # remove images noise.
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    image = np.array(image, np.float32)
-    image = image / 127.5 - 1
-    mask = np.array(mask)
-    # print(mask)
-    # mask[mask == 38.0] = 1.0
-    # mask[mask == 75.0] = 2.0
-    mask[mask >= 2] = 2
-    return image, mask
-
+from preprocess import pre_process
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # 将图片转换为Tensor,归一化至[0,1]
@@ -57,10 +32,6 @@ class MyDataset(Dataset):
     def __getitem__(self, index):
         image_path = os.path.join(self.path, 'image', self.image_paths[index])
         mask_path = os.path.join(self.path, 'mask', self.mask_paths[index])
-
-        # image = PIL.Image.open(image_path).convert('RGB')
-        # mask = PIL.Image.open(mask_path)
-        # image, mask = preprocessing(image, mask, image_size=self.image_size)
 
         image, mask = pre_process(image_path, mask_path, self.image_size)
 
