@@ -5,7 +5,7 @@ import numpy as np
 
 
 def loss_plot(args, train_loss,val_loss):
-    num = args.epochs
+    num = len(train_loss)
     x = [i for i in range(1, num + 1)]
     plot_save_path = r'log/plot/'
     if not os.path.exists(plot_save_path):
@@ -22,7 +22,7 @@ def loss_plot(args, train_loss,val_loss):
 
 
 def metrics_plot(arg, name, *args):
-    num = arg.epochs
+    num = len(args)
     names = name.split('&')
     metrics_value = args
     i = 0

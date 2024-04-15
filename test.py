@@ -31,12 +31,14 @@ def model_test():
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
     start_time = time.time()
 
-    confmat, dice, val_loss, val_miou = evaluate(0, model, val_loader, device=device, num_classes=num_classes)
-    print("val loss:{:.4f}".format(val_loss))
+    confmat, val_dice, val_loss, val_miou = evaluate(0, model, val_loader, device=device, num_classes=num_classes)
+
+    print(f"val_loss: {val_loss:.4f}\n"
+          f"val dice: {val_dice * 100:.2f}\n"
+          f"val miou: {val_miou * 100:.2f}\n"
+          )
     val_info = str(confmat)
     print(val_info)
-    print("val dice:{:.2f}".format(dice * 100))
-    print("val miou:{:.2f}".format(val_miou * 100))
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print("test time {}".format(total_time_str))

@@ -30,24 +30,6 @@ def pre_process(image_path, mask_path, image_size):
     mask = cv2.imread(mask_path)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
-    mask[mask == 129.0] = 1.0
-    mask[mask == 192.0] = 2.0
-    mask[mask == 255.0] = 3.0
-    mask[mask == 64.0] = 0.0
-    return image, mask
-
-def pre_process2(image_path, mask_path, image_size):
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
-    # image = cv2.bilateralFilter(image, 2, 50, 50)  # remove images noise.
-    # img = cv2.applyColorMap(img, cv2.COLORMAP_BONE)  # produce a pseudocolored image. 伪彩色
-    image = np.array(image, np.float32)
-    image = image / 127.5 - 1
-
-    mask = cv2.imread(mask_path)
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
     mask[mask == 64.0] = 1.0
     mask[mask == 129.0] = 2.0
     mask[mask == 192.0] = 3.0

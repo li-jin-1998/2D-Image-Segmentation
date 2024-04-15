@@ -65,12 +65,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
                         help='unet/lraspp/u2net/deeplab/stdcnet/mobilenet/bisenetv2/resunet/efficientnet')
-    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset9/data", help="root")
-    parser.add_argument("--num_classes", default=4, type=int)
+    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset10/data", help="root")
+    parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch_size", default=32, type=int)
-    parser.add_argument("--epochs", default=100, type=int, metavar="N",
+    parser.add_argument("--epochs", default=200, type=int, metavar="N",
                         help="number of total epochs to train")
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
     parser.add_argument('--resume', default=0, help='resume from checkpoint')

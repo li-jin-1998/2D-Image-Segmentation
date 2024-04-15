@@ -42,7 +42,7 @@ def main():
     model.to(device)
     torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
     # predict_image_names = glob.glob(args.data_path + "/augmentation/image/*.*")[x:x + 200]
-    predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")
+    predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::3]
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/1/*.*")
     result_path = './visualization'
     if os.path.exists(result_path):
