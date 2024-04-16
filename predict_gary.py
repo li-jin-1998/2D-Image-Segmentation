@@ -41,9 +41,9 @@ def main():
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
     model.to(device)
     torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
-    # predict_image_names = glob.glob(args.data_path + "/augmentation/image/*.*")[x:x + 200]
-    predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::3]
-    # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/1/*.*")
+    # predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::4]
+    # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::4]
+    predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/image/*.*")[::20]
     result_path = './visualization'
     if os.path.exists(result_path):
         shutil.rmtree(result_path)
@@ -70,7 +70,7 @@ def main():
             prediction = output['out'].argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)
-            predict_result = mask_postprocessing(prediction, original_width, original_height)
+            predict_result = mask_postprocessing2(prediction, original_width, original_height)
             dst = os.path.join(result_path, os.path.splitext(os.path.basename(img_path))[0] + "_predict.png")
             cv2.imwrite(dst, predict_result)
 

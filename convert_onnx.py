@@ -7,6 +7,8 @@ from parse_args import parse_args, get_model
 
 device = torch.device("cpu")
 
+# is_convert_onnx = True
+is_convert_onnx = False
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()

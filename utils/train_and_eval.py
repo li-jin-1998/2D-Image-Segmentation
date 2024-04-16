@@ -12,12 +12,12 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
     losses = {}
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
-    # loss_weight = torch.as_tensor([1, 2, 2, 1], device="cuda")
+    loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
     for name, x in inputs.items():
         target = build_target(target, num_classes)
         a = 0.
         loss = ((1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing))
-                # + a * dice_loss(x, target, multiclass=True))
+        # + a * dice_loss(x, target, multiclass=True))
         # Flooding
         # b = 0.28
         # loss = (loss - b).abs() + b

@@ -14,6 +14,7 @@ from torchvision.ops.misc import Conv2dNormActivation, SqueezeExcitation as SEla
 
 nonlinearity = partial(F.relu, inplace=True)
 
+from convert_onnx import is_convert_onnx
 
 class IntermediateLayerGetter(nn.ModuleDict):
     _version = 2
@@ -172,6 +173,7 @@ class DepthwiseSeparableConv(nn.Module):
         x = self.pointwise(x)
         return x
 
+
 # from network.FasterNet import Partial_conv3
 
 class DecoderBlock(nn.Module):
@@ -254,7 +256,8 @@ class EfficientUNet(nn.Module):
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        # x = x.permute(0, 3, 1, 2)  # rgb
+        if is_convert_onnx:
+            x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
         # for i in range(8):
         #     print(i,backbone_out['stage{}'.format(str(i))].shape)
@@ -274,7 +277,8 @@ class EfficientUNet(nn.Module):
         d2 = self.up3(d3, e1)
         d1 = self.up4(d2, e0)
         out = self.outconv(d1)
-        # out = out.permute(0, 2, 3, 1)
+        if is_convert_onnx:
+            out = out.permute(0, 2, 3, 1)
         return {'out': out}
 
 
