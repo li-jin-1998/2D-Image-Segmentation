@@ -1,6 +1,6 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import time
 import datetime
@@ -49,8 +49,8 @@ def train():
     # summary(model, (3, args.image_size, args.image_size))
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr, weight_decay=1e-4)
-    # optimizer = torch.optim.SGD(params_to_optimize,lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-4)
+    # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 

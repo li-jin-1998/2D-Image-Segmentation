@@ -12,9 +12,8 @@ from network.ACBlock import ACBlock
 
 from torchvision.ops.misc import Conv2dNormActivation, SqueezeExcitation as SElayer
 
-nonlinearity = partial(F.relu, inplace=True)
-
 from convert_onnx import is_convert_onnx
+
 
 class IntermediateLayerGetter(nn.ModuleDict):
     _version = 2
@@ -85,11 +84,6 @@ class Conv(nn.Module):
 class Conv2(nn.Module):
     def __init__(self, in_ch, out_ch, kernel_size=3):
         super(Conv2, self).__init__()
-        # self.conv = nn.Sequential(
-        #     nn.Conv2d(in_ch, out_ch, kernel_size=3, stride=1, padding=1),
-        #     nn.BatchNorm2d(out_ch),
-        #     activation_layer
-        # )
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_ch, out_ch // 2, kernel_size=(3, 1), stride=1, padding=(1, 0), bias=False),
             nn.BatchNorm2d(out_ch // 2),
@@ -101,7 +95,6 @@ class Conv2(nn.Module):
         )
 
     def forward(self, input):
-        # x = self.conv(input)
         x1 = self.conv1(input)
         x2 = self.conv2(input)
         return torch.cat([x1, x2], dim=1)
@@ -141,7 +134,6 @@ class UpConv(nn.Module):
         super(UpConv, self).__init__()
         self.conv = nn.Sequential(
             nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1),
-            # nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -159,13 +151,11 @@ class DepthwiseSeparableConv(nn.Module):
                                                  stride=1, padding=(kernel_size - 1) // 2, groups=in_channels),
                                        nn.BatchNorm2d(in_channels),
                                        activation_layer
-                                       # nn.LeakyReLU(0.1, inplace=True)
                                        )
         # 逐点卷积层
         self.pointwise = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1),
                                        nn.BatchNorm2d(out_channels),
                                        activation_layer
-                                       # nn.LeakyReLU(0.1, inplace=True)
                                        )
 
     def forward(self, x):
@@ -174,15 +164,12 @@ class DepthwiseSeparableConv(nn.Module):
         return x
 
 
-# from network.FasterNet import Partial_conv3
-
 class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock, self).__init__()
 
         middle_channels = int(in_channels * 2)
 
-        # self.conv1 = Partial_conv3(in_channels, 2)
         self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
         self.deconv2 = UpConv(middle_channels, middle_channels)
         self.conv3 = Conv(middle_channels, out_channels, kernel_size=3)
@@ -229,21 +216,9 @@ class EfficientUNet(nn.Module):
         else:
             exit(1)
         stage_indices = [1, 2, 3, 5, 7]
-        # stage_indices = [i for i in range(8)]
         return_layers = dict([(str(j), f"stage{i}") for i, j in enumerate(stage_indices)])
         self.backbone = IntermediateLayerGetter(backbone.features, return_layers=return_layers)
-
-        drop_dict = {0: [0.1, 0.15, 0.15, 0.2],  # dice:96.67 miou:95.19 b1
-                     1: [0.1, 0.15, 0.2, 0.3],  # dice:96.81 miou:95.15
-                     2: [0.1, 0.2, 0.3, 0.1],  # dice:96.89 miou:95.20
-                     3: [0.2, 0.2, 0.2, 0.2],  # dice:96.79 miou:95.24
-                     4: [0.25, 0.25, 0.25, 0.25],  # dice:96.56 miou:95.19
-                     5: [0.1, 0.1, 0.2, 0.2],  # dice:96.68 miou:95.12
-                     6: [0.15, 0.15, 0.2, 0.2],  # dice:96.64 miou:95.11
-                     7: [0.25, 0.25, 0.2, 0.2],  # dice:96.67 miou:95.21
-                     8: [0.3, 0.3, 0.5, 0.5]  # dice:96.72 miou:95.18
-                     }
-        drop = drop_dict[3]
+        drop = [0.2, 0.2, 0.2, 0.2]
         print(drop)
         self.up1 = DecoderBlock(self.stage_out_channels[4], self.stage_out_channels[3], drop[0])
         self.up2 = DecoderBlock(self.stage_out_channels[3] * 2, self.stage_out_channels[2], drop[1])
