@@ -1,5 +1,6 @@
-import torch
 import argparse
+
+import torch
 
 
 def get_device():
@@ -15,28 +16,31 @@ efficientnet_dict = ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2',
 
 def get_model(args):
     print('**************************')
-    print(f'model:{args.arch}\nepoch:{args.epochs}\nbatch size:{args.batch_size}\nimage size:{args.image_size}')
+    print(f'model:{args.arch}\n'
+          f'epoch:{args.epochs}\n'
+          f'batch size:{args.batch_size}\n'
+          f'image size:{args.image_size}')
     print('**************************')
     device = get_device()
     if args.arch == 'unet':
         from network.UNet import UNet
         model = UNet(in_channels=3, num_classes=args.num_classes, base_c=32).to(device)
     if args.arch == 'u2net':
-        from network.U2Net import u2net_lite, u2net_full
+        from network.U2Net import u2net_lite
         model = u2net_lite(args.num_classes).to(device)
     if args.arch == 'deeplab':
-        from network.deeplab_v3 import deeplabv3_mobilenetv3_large, deeplabv3_resnet50, deeplabv3_resnet101
+        from network.deeplab_v3 import deeplabv3_mobilenetv3_large
         model = deeplabv3_mobilenetv3_large(aux=False, num_classes=args.num_classes, pretrain_backbone=True).to(
             device)
     if args.arch == 'mobilenet':
-        from network.mobilenet_unet import MobileV3UNet, MobileV2UNet
+        from network.mobilenet_unet import MobileV3UNet
         model = MobileV3UNet(num_classes=args.num_classes, pretrain_backbone=True).to(device)
     if args.arch == 'efficientnet' or args.arch in efficientnet_dict:
         from network.efficientnet_unet import EfficientUNet
         model = EfficientUNet(num_classes=args.num_classes, pretrain_backbone=True,
                               model_name=args.arch).to(device)
     if args.arch == 'efficientnet2':
-        from efficientunet import get_efficientunet_b0, get_efficientunet_b1
+        from efficientunet import get_efficientunet_b1
         model = get_efficientunet_b1(out_channels=args.num_classes, concat_input=True, pretrained=True).to(device)
 
     return model
