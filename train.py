@@ -120,15 +120,15 @@ def train():
                 best_dice = val_dice
                 best_epoch = epoch
 
-            print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
-            save_file = {"model": model.state_dict(),
-                         "optimizer": optimizer.state_dict(),
-                         "lr_scheduler": lr_scheduler.state_dict(),
-                         "epoch": epoch,
-                         "args": args}
-            if args.amp:
-                save_file["scaler"] = scaler.state_dict()
-            torch.save(save_file, "save_weights/{}_best_model.pth".format(args.arch))
+                print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
+                save_file = {"model": model.state_dict(),
+                             "optimizer": optimizer.state_dict(),
+                             "lr_scheduler": lr_scheduler.state_dict(),
+                             "epoch": epoch,
+                             "args": args}
+                if args.amp:
+                    save_file["scaler"] = scaler.state_dict()
+                torch.save(save_file, "save_weights/{}_best_model.pth".format(args.arch))
 
     with open(results_file, "a") as f:
         best_info = f"[epoch: {best_epoch}]\n" \

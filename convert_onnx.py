@@ -28,7 +28,7 @@ def main():
     # load weights
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
     model.to(device)
-    onnx_file_name = "./save_weights/{}_best_model.onnx".format(args.arch)
+    onnx_file_name = "./save_weights/edentulous.onnx".format(args.arch)
     batch_size = 1
 
     model.eval()
