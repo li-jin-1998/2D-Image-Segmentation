@@ -1,18 +1,19 @@
+import copy
 import glob
 import os
 import random
 import shutil
 import time
-import copy
+
 import PIL
 import cv2
+import numpy as np
 import torch
 import tqdm
-import numpy as np
 from PIL import Image
 
-from preprocess import preprocessing, COLORS
 from parse_args import parse_args, get_model, get_device
+from preprocess import preprocessing, COLORS
 
 
 def main():
@@ -41,16 +42,7 @@ def main():
     with torch.no_grad():
         for img_path in tqdm.tqdm(predict_image_names):
             # load image
-            # original_img2 = cv2.imread(img_path)
-            # original_img2 = cv2.cvtColor(original_img2, cv2.COLOR_BGR2RGB)
-            # original_img2 = cv2.resize(original_img2, (args.image_size, args.image_size), interpolation=cv2.INTER_LINEAR)
-            # original_img2 = original_img2 / 127.5 - 1
-            # img2 = torch.Tensor(original_img2)
-            # img2 = img2.permute(2, 0, 1)
-            # img2 = torch.unsqueeze(img2, dim=0)
-
             original_img = Image.open(img_path).convert('RGB')
-            # print(np.array(original_img).shape,original_img2.shape)
             original_predict_image = copy.deepcopy(original_img)
             original_width, original_height = original_img.size
             original_img = preprocessing(original_img, args.image_size)

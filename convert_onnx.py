@@ -1,11 +1,10 @@
+import numpy as np
+import onnxruntime
 import torch
 import torch.onnx
-import onnx
-import onnxruntime
-import numpy as np
-from parse_args import parse_args, get_model
 
-device = torch.device("cpu")
+import onnx
+from parse_args import parse_args, get_model, get_best_weight_path
 
 # is_convert_onnx = True
 is_convert_onnx = False
@@ -14,15 +13,13 @@ def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 
-def main():
+def convert_onnx():
     args = parse_args()
-    # device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     # create model
     model = get_model(args)
-    weights_path = "./save_weights/{}_best_model.pth".format(args.arch)
-    print(weights_path)
+    weights_path = get_best_weight_path(args)
 
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     print("using {} device.".format(device))
 
     # load weights
@@ -64,4 +61,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    convert_onnx()

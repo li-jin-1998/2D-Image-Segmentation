@@ -9,6 +9,18 @@ def get_device():
     return device
 
 
+def get_best_weight_path(args):
+    weights_path = "save_weights/{}_best_model.pth".format(args.arch)
+    print("load weight: ", weights_path)
+    return weights_path
+
+
+def get_latest_weight_path(args):
+    weights_path = "save_weights/{}_latest_model.pth".format(args.arch)
+    # print(weights_path)
+    return weights_path
+
+
 efficientnet_dict = ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2',
                      'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5',
                      'efficientnet_b6', 'efficientnet_b7']
@@ -57,6 +69,7 @@ def parse_args():
     parser.add_argument("-b", "--batch_size", default=64, type=int)
     parser.add_argument("--epochs", default=300, type=int, metavar="N",
                         help="number of total epochs to train")
+    # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
     parser.add_argument('--resume', default=0, help='resume from checkpoint')
     parser.add_argument('--multi_scale', default=False, help='multi-scale training')

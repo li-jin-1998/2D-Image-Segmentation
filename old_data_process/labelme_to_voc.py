@@ -3,17 +3,16 @@ import glob
 import os
 import shutil
 
-import imgviz
 import labelme
 from sklearn.model_selection import KFold
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', help='input directory',default="/mnt/algo_storage_server/UNet/Data/Checked/")
-    parser.add_argument('--output_dir', help='output directory',default="/home/lij/PycharmProjects/Seg/data/")
-    parser.add_argument('--labels', help='labels file',default="/home/lij/PycharmProjects/UNet/label.txt")
-    parser.add_argument('--noviz', help='no visualization', action='store_true',default=True)
+    parser.add_argument('--input_dir', help='input directory', default="/mnt/algo_storage_server/UNet/Data/Checked/")
+    parser.add_argument('--output_dir', help='output directory', default="/home/lij/PycharmProjects/Seg/data/")
+    parser.add_argument('--labels', help='labels file', default="/home/lij/PycharmProjects/UNet/label.txt")
+    parser.add_argument('--noviz', help='no visualization', action='store_true', default=True)
     args = parser.parse_args()
 
     test_output_dir = os.path.join(args.output_dir, 'test')
@@ -68,7 +67,7 @@ def main():
     test_image_names = []
     train_image_names = []
     for train_index, test_index in fold.split(
-            json_file_names[:json_file_number - json_file_residue]):
+        json_file_names[:json_file_number - json_file_residue]):
         for i in test_index:
             test_file_name = json_file_names[i - 1]
             print('Generating test sample from:', test_file_name)
@@ -83,7 +82,7 @@ def main():
             with open(out_img_file, 'wb') as f:
                 f.write(label_file.imageData)
             img = labelme.utils.img_data_to_arr(label_file.imageData)
-            print(img.shape," ",class_name_to_id)
+            print(img.shape, " ", class_name_to_id)
             lbl, _ = labelme.utils.shapes_to_label(
                 img_shape=img.shape,
                 shapes=label_file.shapes,
