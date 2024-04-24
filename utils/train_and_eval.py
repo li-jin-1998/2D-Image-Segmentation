@@ -4,8 +4,9 @@ import numpy as np
 import torch
 import tqdm
 from torch.nn.functional import cross_entropy
+
 import utils.distributed_utils as utils
-from utils.loss import dice_loss, build_target, iou_loss, FocalLoss
+from utils.loss import dice_loss, build_target
 
 
 def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoothing: float = 0.1):
@@ -28,6 +29,7 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
 
 def evaluate(epoch_num, model, data_loader, device, num_classes):
     model.eval()
+
     confmat = utils.ConfusionMatrix(num_classes)
     dice = utils.DiceCoefficient(num_classes=num_classes)
     val_loss = []
@@ -44,7 +46,7 @@ def evaluate(epoch_num, model, data_loader, device, num_classes):
             confmat.update(target.flatten(), output.argmax(1).flatten())
             dice.update(output, target)
             val_loss.append(loss.item())
-            data_loader.desc = "[val epoch {}] loss: {:.4f}".format(epoch_num, np.mean(val_loss))
+            data_loader.desc = f"[val epoch {epoch_num}] loss: {np.mean(val_loss):.4f}"
         confmat.reduce_from_all_processes()
         dice.reduce_from_all_processes()
 
@@ -54,6 +56,9 @@ def evaluate(epoch_num, model, data_loader, device, num_classes):
 def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classes,
                     lr_scheduler, scaler=None):
     model.train()
+
+    confmat = utils.ConfusionMatrix(num_classes)
+    dice = utils.DiceCoefficient(num_classes=num_classes)
 
     train_loss = []
     data_loader = tqdm.tqdm(data_loader, file=sys.stdout)
@@ -72,11 +77,17 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
             loss.backward()
             optimizer.step()
         lr_scheduler.step()
-        lr = optimizer.param_groups[0]["lr"]
+
+        if isinstance(output, dict):
+            output = output['out']
+        confmat.update(target.flatten(), output.argmax(1).flatten())
+        dice.update(output, target)
         train_loss.append(loss.item())
-        data_loader.desc = "[train epoch {}] loss: {:.4f}".format(epoch_num, np.mean(train_loss))
+
+        data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} miou:"
+    lr = optimizer.param_groups[0]["lr"]
     # lr_scheduler.step()
-    return np.mean(train_loss), lr
+    return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr
 
 
 def create_lr_scheduler(optimizer,

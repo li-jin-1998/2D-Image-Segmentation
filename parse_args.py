@@ -11,7 +11,7 @@ def get_device():
 
 def get_best_weight_path(args):
     weights_path = "save_weights/{}_best_model.pth".format(args.arch)
-    print("load weight: ", weights_path)
+    print("best weight: ", weights_path)
     return weights_path
 
 
@@ -37,13 +37,6 @@ def get_model(args):
     if args.arch == 'unet':
         from network.UNet import UNet
         model = UNet(in_channels=3, num_classes=args.num_classes, base_c=32).to(device)
-    if args.arch == 'u2net':
-        from network.U2Net import u2net_lite
-        model = u2net_lite(args.num_classes).to(device)
-    if args.arch == 'deeplab':
-        from network.deeplab_v3 import deeplabv3_mobilenetv3_large
-        model = deeplabv3_mobilenetv3_large(aux=False, num_classes=args.num_classes, pretrain_backbone=True).to(
-            device)
     if args.arch == 'mobilenet':
         from network.mobilenet_unet import MobileV3UNet
         model = MobileV3UNet(num_classes=args.num_classes, pretrain_backbone=True).to(device)
@@ -62,7 +55,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
                         help='unet/u2net/deeplab/mobilenet/efficientnet')
-    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset10/data", help="root")
+    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset13/data", help="root")
     parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
@@ -75,7 +68,7 @@ def parse_args():
     parser.add_argument('--multi_scale', default=False, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',
                         help='start epoch')
-    parser.add_argument('--save_best', default=True, type=bool, help='only save best dice weights')
+    parser.add_argument('--save_best', default=True, type=bool, help='only save best metric weights')
     # Mixed precision training parameters
     parser.add_argument("--amp", default=False, type=bool,
                         help="Use torch.cuda.amp for mixed precision training")

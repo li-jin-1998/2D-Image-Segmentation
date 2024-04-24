@@ -3,6 +3,7 @@ visualization/
 ./*.png
 *.png
 *.jpg
+./runs/
 save_weights/
 onnx/
 */__pycache__
