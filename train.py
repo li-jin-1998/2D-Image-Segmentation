@@ -1,6 +1,6 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import time
 import datetime
@@ -8,7 +8,7 @@ import torch
 
 from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
 from dataset import MyDataset
-from parse_args import parse_args, get_model
+from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path
 
 
 def train():
@@ -21,10 +21,10 @@ def train():
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    # train_dataset = MyDataset(args.data_path + "/train", args.image_size)
-    # val_dataset = MyDataset(args.data_path + "/test", args.image_size)
-    train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    train_dataset = MyDataset(args.data_path + "/train", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
+    # train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
+    # val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -49,8 +49,8 @@ def train():
     # summary(model, (3, args.image_size, args.image_size))
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr, weight_decay=1e-4)
-    # optimizer = torch.optim.SGD(params_to_optimize,lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-4)
+    # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
@@ -59,12 +59,12 @@ def train():
     lr_scheduler = create_lr_scheduler(optimizer, len(train_loader), args.epochs, warmup=False, warmup_epochs=1)
 
     if args.multi_scale:
-        weights_path = "save_weights/{}_latest_model.pth".format(args.arch)
+        weights_path = get_latest_weight_path(args)
         model.load_state_dict(torch.load(weights_path, map_location='cpu'))
         print(">" * 10, 'load last weight:', weights_path)
 
     if args.resume:
-        weights_path = "save_weights/{}_best_model.pth".format(args.arch)
+        weights_path = get_best_weight_path(args)
         checkpoint = torch.load(weights_path, map_location='cpu')
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
@@ -112,7 +112,7 @@ def train():
                          f"dice: {val_dice * 100:.2f}\n" \
                          f"miou: {val_miou * 100:.2f}\n"
             f.write(train_info + val_info + "\n\n")
-        torch.save(model.state_dict(), "save_weights/{}_latest_model.pth".format(args.arch))
+        torch.save(model.state_dict(), get_latest_weight_path(args))
 
         if args.save_best is True:
             if best_miou <= val_miou:
@@ -120,15 +120,15 @@ def train():
                 best_dice = val_dice
                 best_epoch = epoch
 
-                print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
-                save_file = {"model": model.state_dict(),
-                             "optimizer": optimizer.state_dict(),
-                             "lr_scheduler": lr_scheduler.state_dict(),
-                             "epoch": epoch,
-                             "args": args}
-                if args.amp:
-                    save_file["scaler"] = scaler.state_dict()
-                torch.save(save_file, "save_weights/{}_best_model.pth".format(args.arch))
+            print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
+            save_file = {"model": model.state_dict(),
+                         "optimizer": optimizer.state_dict(),
+                         "lr_scheduler": lr_scheduler.state_dict(),
+                         "epoch": epoch,
+                         "args": args}
+            if args.amp:
+                save_file["scaler"] = scaler.state_dict()
+            torch.save(save_file, get_best_weight_path(args))
 
     with open(results_file, "a") as f:
         best_info = f"[epoch: {best_epoch}]\n" \

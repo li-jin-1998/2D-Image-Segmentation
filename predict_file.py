@@ -3,19 +3,19 @@ import os
 import random
 import shutil
 import time
-import copy
+
 import PIL
 import cv2
+import numpy as np
 import torch
 import tqdm
-import numpy as np
 from PIL import Image
 
-from preprocess import preprocessing, COLORS
 from parse_args import parse_args, get_model
+from preprocess import preprocessing, COLORS
 
 
-def main():
+def predict_file():
     args = parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,4 +69,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    predict_file()

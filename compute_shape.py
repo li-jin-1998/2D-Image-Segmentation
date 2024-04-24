@@ -1,13 +1,14 @@
 import os
 
 from PIL import Image
+from tqdm import tqdm
 
-data_path = "./data/train/image"
+data_path = "/mnt/algo_storage_server/UNet/Dataset/image"
 
 i = 0
 j = 0
 k = 0
-for path in os.listdir(data_path):
+for path in tqdm(os.listdir(data_path)):
     image = Image.open(os.path.join(data_path, path))
     if image.size == (272, 240):
         i = i + 1

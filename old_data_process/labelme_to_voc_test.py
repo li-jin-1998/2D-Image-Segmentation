@@ -8,9 +8,9 @@ import labelme
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', help='input directory',default="/mnt/algo_storage_server/UNet/Data/Checked/")
-    parser.add_argument('--output_dir', help='output directory',default="/mnt/algo_storage_server/UNet/Dataset")
-    parser.add_argument('--labels', help='labels file',default="/home/lij/PycharmProjects/UNet/label.txt")
+    parser.add_argument('--input_dir', help='input directory', default="/mnt/algo_storage_server/UNet/Data/Checked/")
+    parser.add_argument('--output_dir', help='output directory', default="/mnt/algo_storage_server/UNet/Dataset")
+    parser.add_argument('--labels', help='labels file', default="/home/lij/PycharmProjects/UNet/label.txt")
     args = parser.parse_args()
 
     if os.path.exists(args.output_dir):
@@ -22,7 +22,6 @@ def main():
 
     os.makedirs(os.path.join(args.output_dir, 'image'))
     os.makedirs(os.path.join(args.output_dir, 'mask'))
-
 
     class_names = []
     class_name_to_id = {}
@@ -39,7 +38,7 @@ def main():
         class_names.append(class_name)
         class_name_to_id[class_name] = class_id
     class_names = tuple(class_names)
-    print(class_name_to_id,class_names)
+    print(class_name_to_id, class_names)
     exit(0)
     out_class_names_file = os.path.join(args.output_dir, 'class_names.txt')
     with open(out_class_names_file, 'w') as f:
@@ -49,22 +48,21 @@ def main():
     json_file_names = glob.glob(os.path.join(args.input_dir, '*.json'))
     image_names = []
     for file_name in json_file_names:
-            print('Generating test sample from:', file_name)
-            label_file = labelme.LabelFile(filename=file_name)
-            base = os.path.splitext(os.path.basename(file_name))[0]
-            image_names.append(base + '.png')
-            out_img_file = os.path.join(args.output_dir, 'image', base + '.png')
-            out_mask_file = os.path.join(args.output_dir, 'mask', base + '.png')
-            with open(out_img_file, 'wb') as f:
-                f.write(label_file.imageData)
-            img = labelme.utils.img_data_to_arr(label_file.imageData)
-            # print(img.shape," ",class_name_to_id)
-            lbl, _ = labelme.utils.shapes_to_label(
-                img_shape=img.shape,
-                shapes=label_file.shapes,
-                label_name_to_value=class_name_to_id)
-            labelme.utils.lblsave(out_mask_file, lbl)
-
+        print('Generating test sample from:', file_name)
+        label_file = labelme.LabelFile(filename=file_name)
+        base = os.path.splitext(os.path.basename(file_name))[0]
+        image_names.append(base + '.png')
+        out_img_file = os.path.join(args.output_dir, 'image', base + '.png')
+        out_mask_file = os.path.join(args.output_dir, 'mask', base + '.png')
+        with open(out_img_file, 'wb') as f:
+            f.write(label_file.imageData)
+        img = labelme.utils.img_data_to_arr(label_file.imageData)
+        # print(img.shape," ",class_name_to_id)
+        lbl, _ = labelme.utils.shapes_to_label(
+            img_shape=img.shape,
+            shapes=label_file.shapes,
+            label_name_to_value=class_name_to_id)
+        labelme.utils.lblsave(out_mask_file, lbl)
 
     image_number = len(image_names)
     image_list = range(image_number)

@@ -1,22 +1,4 @@
-import glob
-import os
-
 import numpy as np
-import torch
-
-import PIL.Image
-
-
-def mask_preprocessing(mask, image_size):
-    mask = mask.resize((image_size, image_size),
-                       PIL.Image.NEAREST)
-    mask = np.array(mask)
-    # print(np.max(mask))
-    mask[mask == 38.0] = 1.0
-    mask[mask == 75.0] = 2.0
-    mask[mask >= 2] = 2
-    return mask
-
 
 def compute_iou(pred_mask, true_mask):
     intersection = np.logical_and(pred_mask, true_mask)
@@ -133,30 +115,4 @@ class ConfusionMatrix(object):
 
 
 if __name__ == '__main__':
-    mious = []
-    # conf = ConfusionMatrix(3)
-    for mask_path in glob.glob("data/test/mask/*.*"):
-        # print(path)
-        predict_path = mask_path.replace('mask', 'predict')
-
-        label = PIL.Image.open(mask_path).convert('L')
-        label = mask_preprocessing(label, 192)
-        predict = PIL.Image.open(predict_path).convert('L')
-        predict = mask_preprocessing(predict, 192)
-
-        miou = compute_mean_iou(label, predict)
-        # print(miou)
-        # conf.update(label.flatten(), predict.flatten())
-        # miou = conf.get_miou()
-        # conf.reset()
-        # print(miou)
-        mious.append(miou)
-        # confusion_matrix = image_pair_to_confusion_matrix(predict, label, 3)
-        # miou2 = calculate_miou(confusion_matrix)
-        # mious.append(miou2)
-        # print("mIoU:", miou2)
-        # print("Confusion Matrix:")
-        # print(confusion_matrix)
-    # miou = conf.get_miou()
-    # print(miou)
-    print(np.sum(mious) / len(mious), len(mious))
+    pass

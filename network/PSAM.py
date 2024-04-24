@@ -100,25 +100,25 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class PSAModule(nn.Module):
 
-    def __init__(self, inplans, planes, conv_kernels=[3, 5, 7, 9], stride=1, conv_groups=[1, 4, 8, 16]):
+    def __init__(self, inplanes, planes, stride=1):
         # groups 保证相同的计算量大小  不同的卷积核  空洞卷积应该可以省略这一步
         super(PSAModule, self).__init__()
         conv_groups = [1, 1, 1, 1]
-        self.conv_1 = conv(inplans, planes // 4, kernel_size=3, padding=3 // 2, dilation=1,
+        self.conv_1 = conv(inplanes, planes // 4, kernel_size=3, padding=3 // 2, dilation=1,
                            stride=stride, groups=conv_groups[0])
-        self.conv_2 = conv(inplans, planes // 4, kernel_size=3, padding=5 // 2, dilation=2,
+        self.conv_2 = conv(inplanes, planes // 4, kernel_size=3, padding=5 // 2, dilation=2,
                            stride=stride, groups=conv_groups[1])
-        self.conv_3 = conv(inplans, planes // 4, kernel_size=3, padding=7 // 2, dilation=3,
+        self.conv_3 = conv(inplanes, planes // 4, kernel_size=3, padding=7 // 2, dilation=3,
                            stride=stride, groups=conv_groups[2])
-        self.conv_4 = conv(inplans, planes // 4, kernel_size=3, padding=9 // 2, dilation=4,
+        self.conv_4 = conv(inplanes, planes // 4, kernel_size=3, padding=9 // 2, dilation=4,
                            stride=stride, groups=conv_groups[3])
-        # self.conv_1 = conv(inplans, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
+        # self.conv_1 = conv(inplanes, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
         #                    stride=stride, groups=conv_groups[0])
-        # self.conv_2 = conv(inplans, planes // 4, kernel_size=conv_kernels[1], padding=conv_kernels[1] // 2,
+        # self.conv_2 = conv(inplanes, planes // 4, kernel_size=conv_kernels[1], padding=conv_kernels[1] // 2,
         #                    stride=stride, groups=conv_groups[1])
-        # self.conv_3 = conv(inplans, planes // 4, kernel_size=conv_kernels[2], padding=conv_kernels[2] // 2,
+        # self.conv_3 = conv(inplanes, planes // 4, kernel_size=conv_kernels[2], padding=conv_kernels[2] // 2,
         #                    stride=stride, groups=conv_groups[2])
-        # self.conv_4 = conv(inplans, planes // 4, kernel_size=conv_kernels[3], padding=conv_kernels[3] // 2,
+        # self.conv_4 = conv(inplanes, planes // 4, kernel_size=conv_kernels[3], padding=conv_kernels[3] // 2,
         #                    stride=stride, groups=conv_groups[3])
         # self.se = SEWeightModule(planes // 4)
         self.se = channel_attention(planes // 4)
@@ -161,28 +161,17 @@ class PSAModule(nn.Module):
 
 class PSAModule_initial(nn.Module):
 
-    def __init__(self, inplans, planes, conv_kernels=[3, 5, 7, 9], stride=1, conv_groups=[1, 4, 8, 16]):
-        # groups 保证相同的计算量大小  不同的卷积核  空洞卷积应该可以省略这一步
+    def __init__(self, inplanes, planes, conv_kernels=[3, 5, 7, 9], stride=1, conv_groups=[1, 4, 8, 16]):
         super(PSAModule_initial, self).__init__()
-        # conv_groups = [1, 1, 1, 1]
-        # self.conv_1 = conv(inplans, planes // 4, kernel_size=3, padding=3 // 2, dilation=1,
-        #                    stride=stride, groups=conv_groups[0])
-        # self.conv_2 = conv(inplans, planes // 4, kernel_size=3, padding=5 // 2, dilation=2,
-        #                    stride=stride, groups=conv_groups[1])
-        # self.conv_3 = conv(inplans, planes // 4, kernel_size=3, padding=7 // 2, dilation=3,
-        #                    stride=stride, groups=conv_groups[2])
-        # self.conv_4 = conv(inplans, planes // 4, kernel_size=3, padding=9 // 2, dilation=4,
-        #                    stride=stride, groups=conv_groups[3])
-        self.conv_1 = conv(inplans, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
+        self.conv_1 = conv(inplanes, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
                            stride=stride, groups=conv_groups[0])
-        self.conv_2 = conv(inplans, planes // 4, kernel_size=conv_kernels[1], padding=conv_kernels[1] // 2,
+        self.conv_2 = conv(inplanes, planes // 4, kernel_size=conv_kernels[1], padding=conv_kernels[1] // 2,
                            stride=stride, groups=conv_groups[1])
-        self.conv_3 = conv(inplans, planes // 4, kernel_size=conv_kernels[2], padding=conv_kernels[2] // 2,
+        self.conv_3 = conv(inplanes, planes // 4, kernel_size=conv_kernels[2], padding=conv_kernels[2] // 2,
                            stride=stride, groups=conv_groups[2])
-        self.conv_4 = conv(inplans, planes // 4, kernel_size=conv_kernels[3], padding=conv_kernels[3] // 2,
+        self.conv_4 = conv(inplanes, planes // 4, kernel_size=conv_kernels[3], padding=conv_kernels[3] // 2,
                            stride=stride, groups=conv_groups[3])
         self.se = SEWeightModule(planes // 4)
-        # self.se = channel_attention(planes // 4)
         self.split_channel = planes // 4
         self.softmax = nn.Softmax(dim=1)
 
@@ -190,14 +179,11 @@ class PSAModule_initial(nn.Module):
 
     def forward(self, x):
         batch_size = x.shape[0]
-        # print(x.shape)
         x1 = self.conv_1(x)
         x2 = self.conv_2(x)
         x3 = self.conv_3(x)
         x4 = self.conv_4(x)
-        # print(x1.shape,x2.shape,x3.shape,x4.shape)
         feats = torch.cat((x1, x2, x3, x4), dim=1)
-        # feats=self.relu(feats)
         # return feats
         feats = feats.view(batch_size, 4, self.split_channel, feats.shape[2], feats.shape[3])
 
@@ -205,7 +191,6 @@ class PSAModule_initial(nn.Module):
         x2_se = self.se(x2)
         x3_se = self.se(x3)
         x4_se = self.se(x4)
-        # print(x1_se.shape, x2_se.shape, x3_se.shape, x4_se.shape)
         x_se = torch.cat((x1_se, x2_se, x3_se, x4_se), dim=1)
         attention_vectors = x_se.view(batch_size, 4, self.split_channel, 1, 1)
         attention_vectors = self.softmax(attention_vectors)
@@ -218,33 +203,6 @@ class PSAModule_initial(nn.Module):
                 out = torch.cat((x_se_weight_fp, out), 1)
 
         return out
-
-
-# class SPPblock(nn.Module):
-#     def __init__(self, in_channels):
-#         super(SPPblock, self).__init__()
-#         self.pool1 = nn.MaxPool2d(kernel_size=[2, 2])
-#         self.pool2 = nn.MaxPool2d(kernel_size=[3, 3])
-#         self.pool3 = nn.MaxPool2d(kernel_size=[5, 5])
-#         self.pool4 = nn.MaxPool2d(kernel_size=[6, 6])
-#         self.conv = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1, padding=0)
-#
-#         self.conv2 = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 2, kernel_size=1, padding=0)
-#
-#     # self.se = channel_attention(in_channels // 4)
-#     # self.split_channel = in_channels // 4
-#     # self.softmax = nn.Softmax(dim=1)
-#     def forward(self, x):
-#         self.in_channels, h, w = x.size(1), x.size(2), x.size(3)
-#         # batch_size = x.shape[0]
-#         self.layer1 = F.upsample(self.conv(self.pool1(x)), size=(h, w), mode='bilinear')
-#         self.layer2 = F.upsample(self.conv(self.pool2(x)), size=(h, w), mode='bilinear')
-#         self.layer3 = F.upsample(self.conv(self.pool3(x)), size=(h, w), mode='bilinear')
-#         self.layer4 = F.upsample(self.conv(self.pool4(x)), size=(h, w), mode='bilinear')
-#         self.layer5 = self.conv2(x)
-#         out = torch.cat([self.layer5, self.layer1, self.layer2, self.layer3, self.layer4], 1)
-#         # print(x.shape,out.shape)
-#         return out
 
 
 class PPM(nn.Module):
@@ -305,10 +263,6 @@ class DACblock(nn.Module):
 class SPPblock(nn.Module):
     def __init__(self, in_channels):
         super(SPPblock, self).__init__()
-        # self.pool1 = nn.MaxPool2d(kernel_size=[3, 3], stride=1,padding=1)
-        # self.pool2 = nn.MaxPool2d(kernel_size=[3, 3], stride=1,padding=1)
-        # self.pool3 = nn.MaxPool2d(kernel_size=[5, 5], stride=1,padding=2)
-        # self.pool4 = nn.MaxPool2d(kernel_size=[5, 5], stride=1,padding=2)
         self.pool1 = nn.MaxPool2d(kernel_size=[2, 2])
         self.pool2 = nn.MaxPool2d(kernel_size=[3, 3])
         self.pool3 = nn.MaxPool2d(kernel_size=[5, 5])
@@ -326,7 +280,3 @@ class SPPblock(nn.Module):
         out = torch.cat([self.layer1, self.layer2, self.layer3, self.layer4, x], 1)
 
         return out
-# model = PPM(512,512//8,(2,3,5,6)).to('cuda')
-# # model = SPPblock(512).to('cuda')
-# from torchsummary import summary
-# summary(model, (512,16,16))

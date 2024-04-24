@@ -1,14 +1,7 @@
-import numpy as np
-from PIL import Image, ImageEnhance,ImageFilter
+from PIL import Image
 
 image = Image.open('./test.png')
 image.show()
-
-
-# contrast = ImageEnhance.Contrast(image)
-# contrast_image = contrast.enhance(0.8)
-#
-# contrast_image.show()
 
 def enhance_h(image, hue=6):
     # 将图像转换为 HSV 模式
