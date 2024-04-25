@@ -84,7 +84,7 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
         dice.update(output, target)
         train_loss.append(loss.item())
 
-        data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} miou:"
+        data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} "
     lr = optimizer.param_groups[0]["lr"]
     # lr_scheduler.step()
     return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr

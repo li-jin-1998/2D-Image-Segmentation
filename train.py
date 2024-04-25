@@ -27,10 +27,10 @@ def train():
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    train_dataset = MyDataset(args.data_path + "/train", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
-    # train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
-    # val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    # train_dataset = MyDataset(args.data_path + "/train", args.image_size)
+    # val_dataset = MyDataset(args.data_path + "/test", args.image_size)
+    train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -55,7 +55,7 @@ def train():
     # summary(model, (3, args.image_size, args.image_size))
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-4)
+    optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr, weight_decay=1e-4)
     # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
@@ -101,8 +101,7 @@ def train():
         print(f"train_loss: {train_loss:.4f}\n"
               f"val_loss: {val_loss:.4f}\n"
               f"val dice: {val_dice * 100:.2f}\n"
-              f"val miou: {val_miou * 100:.2f}\n"
-              )
+              f"val miou: {val_miou * 100:.2f}")
         val_info = str(confmat)
         # print(val_info)
         train_losses.append(train_loss)
@@ -110,7 +109,7 @@ def train():
         dices.append(val_dice)
         mious.append(val_miou)
 
-        tags = ["train_loss", "train_acc", "val_loss", "val_miou", "learning_rate"]
+        tags = ["train_loss", "train_miou", "val_loss", "val_miou", "learning_rate"]
         tb_writer.add_scalar(tags[0], train_loss, epoch)
         tb_writer.add_scalar(tags[1], train_miou, epoch)
         tb_writer.add_scalar(tags[2], val_loss, epoch)
@@ -135,7 +134,6 @@ def train():
                 best_dice = val_dice
                 best_epoch = epoch
 
-                print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
                 save_file = {"model": model.state_dict(),
                              "optimizer": optimizer.state_dict(),
                              "lr_scheduler": lr_scheduler.state_dict(),
@@ -144,6 +142,7 @@ def train():
                 if args.amp:
                     save_file["scaler"] = scaler.state_dict()
                 torch.save(save_file, get_best_weight_path(args))
+        print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
 
     with open(results_file, "a") as f:
         best_info = f"[epoch: {best_epoch}]\n" \

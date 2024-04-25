@@ -8,17 +8,17 @@ import torch
 
 from utils.train_and_eval import evaluate
 from dataset import MyDataset
-from parse_args import parse_args, get_model
+from parse_args import parse_args, get_model, get_device
 
 
 def model_test():
     args = parse_args()
 
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    device = get_device()
     batch_size = args.batch_size
     num_classes = args.num_classes
 
-    val_dataset = MyDataset(args.data_path+"/test", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     val_loader = torch.utils.data.DataLoader(val_dataset,

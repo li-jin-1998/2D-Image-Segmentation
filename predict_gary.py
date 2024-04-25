@@ -20,7 +20,7 @@ def mask_postprocessing(mask, w, h):
     return mask
 
 
-def main():
+def predict_gray():
     args = parse_args()
     device = get_device()
 
@@ -72,4 +72,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    predict_gray()
