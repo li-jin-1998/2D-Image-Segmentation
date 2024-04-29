@@ -1,12 +1,9 @@
-import cv2
-import torch
-import numpy as np
-from PIL import ImageFilter
-from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
 import os
 
-import PIL.Image
+import numpy as np
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 
 torch.manual_seed(3407)
 
@@ -60,16 +57,14 @@ def compute_weights(masks_path):
     print('Weights for different classes are:', weights_list)
 
 
-def main():
-    dataset = MyDataset("data/train", 192)
+if __name__ == '__main__':
+    from parse_args import parse_args
+
+    args = parse_args()
+    dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
     data = DataLoader(dataset, batch_size=1, shuffle=True)
     for i, j in data:
         print(i.shape, j.shape)
         print(np.min(i.numpy()), np.max(i.numpy()))
         print(np.min(j.numpy()), np.max(j.numpy()))
-    # compute_weights("data/train/masks.npy")
-
-
-if __name__ == '__main__':
-    main()
     # print(torch.cuda.is_bf16_supported())

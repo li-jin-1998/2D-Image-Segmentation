@@ -58,7 +58,9 @@ def predict_gray():
             image = torch.unsqueeze(image, dim=0)
 
             output = model(image.to(device))
-            prediction = output['out'].argmax(1).squeeze(0)
+            if isinstance(output, dict):
+                output = output['out']
+            prediction = output.argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)
             predict_result = mask_postprocessing(prediction, original_img.shape[1], original_img.shape[0])

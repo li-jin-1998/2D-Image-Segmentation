@@ -1,16 +1,12 @@
 from collections import OrderedDict
-from functools import partial
 from typing import Dict
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor
 from torchsummary import summary
-from torchvision import models, ops
+from torchvision import ops
 from torchvision.models import efficientnet
-from network.ACBlock import ACBlock
-
-from torchvision.ops.misc import Conv2dNormActivation, SqueezeExcitation as SElayer
 
 from convert_onnx import is_convert_onnx
 
@@ -58,7 +54,7 @@ class OutConv(nn.Sequential):
         super(OutConv, self).__init__()
         middle_channels = in_channels // 2
         self.conv = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, middle_channels, 4, 2, 1, 0),
+            nn.ConvTranspose2d(in_channels, middle_channels, 4, 2, 1, 0, bias=False),
             nn.BatchNorm2d(middle_channels),
             activation_layer,
             nn.Conv2d(middle_channels, num_classes, kernel_size=3, stride=1, padding=1)
@@ -72,7 +68,7 @@ class Conv(nn.Module):
     def __init__(self, in_ch, out_ch, kernel_size=3):
         super(Conv, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=1, padding=(kernel_size - 1) // 2),
+            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=1, padding=(kernel_size - 1) // 2, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -114,26 +110,11 @@ class DeformConv(nn.Module):
         return self.conv(input)
 
 
-class up_conv(nn.Module):
-    def __init__(self, ch_in, ch_out):
-        super(up_conv, self).__init__()
-        self.up = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear'),
-            nn.Conv2d(ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
-            nn.BatchNorm2d(ch_out),
-            activation_layer
-        )
-
-    def forward(self, x):
-        x = self.up(x)
-        return x
-
-
 class UpConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(UpConv, self).__init__()
         self.conv = nn.Sequential(
-            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -143,20 +124,24 @@ class UpConv(nn.Module):
 
 
 class DepthwiseSeparableConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=3):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1):
         super(DepthwiseSeparableConv, self).__init__()
 
         # 深度卷积层
-        self.depthwise = nn.Sequential(nn.Conv2d(in_channels, in_channels, kernel_size,
-                                                 stride=1, padding=(kernel_size - 1) // 2, groups=in_channels),
-                                       nn.BatchNorm2d(in_channels),
-                                       activation_layer
-                                       )
+        self.depthwise = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, kernel_size,
+                      stride=stride, padding=(kernel_size - 1) // 2,
+                      groups=in_channels,
+                      bias=False),
+            nn.BatchNorm2d(in_channels),
+            activation_layer
+        )
         # 逐点卷积层
-        self.pointwise = nn.Sequential(nn.Conv2d(in_channels, out_channels, 1),
-                                       nn.BatchNorm2d(out_channels),
-                                       activation_layer
-                                       )
+        self.pointwise = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, stride, bias=False),
+            nn.BatchNorm2d(out_channels),
+            activation_layer
+        )
 
     def forward(self, x):
         x = self.depthwise(x)
@@ -213,6 +198,12 @@ class EfficientUNet(nn.Module):
         elif model_name == 'efficientnet_b7':
             backbone = efficientnet.efficientnet_b7(pretrained=pretrain_backbone)
             self.stage_out_channels = [32, 48, 80, 224, 640]
+        elif model_name == 'efficientnet_v2_s':
+            backbone = efficientnet.efficientnet_v2_s(pretrained=pretrain_backbone)
+            self.stage_out_channels = [24, 48, 64, 160, 1280]
+        elif model_name == 'efficientnet_v2_m':
+            backbone = efficientnet.efficientnet_v2_m(pretrained=pretrain_backbone)
+            self.stage_out_channels = [24, 48, 80, 176, 512]
         else:
             exit(1)
         stage_indices = [1, 2, 3, 5, 7]
@@ -226,7 +217,7 @@ class EfficientUNet(nn.Module):
         self.up4 = DecoderBlock(self.stage_out_channels[1] * 2, self.stage_out_channels[0], drop[3])
         self.outconv = OutConv(self.stage_out_channels[0] * 2, num_classes=num_classes)
 
-        from network.PSAM import PPM, PSAModule, PSAModule_initial
+        from network.PSAM import PSAModule
         self.PPM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
@@ -234,8 +225,8 @@ class EfficientUNet(nn.Module):
         if is_convert_onnx:
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
-        # for i in range(8):
-        #     print(i,backbone_out['stage{}'.format(str(i))].shape)
+        # for i in range(5):
+        #     print(i, backbone_out['stage{}'.format(str(i))].shape)
         # encoder
         e0 = backbone_out['stage0']
         e1 = backbone_out['stage1']
@@ -259,5 +250,5 @@ class EfficientUNet(nn.Module):
 
 if __name__ == '__main__':
     model = EfficientUNet(num_classes=3, pretrain_backbone=True,
-                          model_name='efficientnet_b1').to("cuda")
+                          model_name='efficientnet_v2_s').to("cuda")
     summary(model, (3, 192, 192))

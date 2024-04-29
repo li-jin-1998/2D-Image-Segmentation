@@ -23,7 +23,7 @@ def get_latest_weight_path(args):
 
 efficientnet_dict = ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2',
                      'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5',
-                     'efficientnet_b6', 'efficientnet_b7']
+                     'efficientnet_b6', 'efficientnet_b7', 'efficientnet_v2_s']
 
 
 def get_model(args):
@@ -53,8 +53,8 @@ def get_model(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
-    parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
-                        help='unet/u2net/deeplab/mobilenet/efficientnet')
+    parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b2',
+                        help='unet/u2net/deeplab/mobilenet/efficientnet/efficientnet_v2_s')
     parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset13/data", help="root")
     parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
@@ -64,7 +64,7 @@ def parse_args():
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
-    parser.add_argument('--resume', default=0, help='resume from checkpoint')
+    parser.add_argument('--resume', default=1, help='resume from checkpoint')
     parser.add_argument('--multi_scale', default=False, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',
                         help='start epoch')

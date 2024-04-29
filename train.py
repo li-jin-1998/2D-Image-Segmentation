@@ -1,6 +1,6 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 import time
 import datetime
@@ -32,7 +32,7 @@ def train():
     train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
     val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
 
-    num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
+    num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0])
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=batch_size,
                                                num_workers=num_workers,
@@ -99,6 +99,7 @@ def train():
                                                          num_classes=num_classes)
 
         print(f"train_loss: {train_loss:.4f}\n"
+              f"train_miou: {train_miou:.4f}\n"
               f"val_loss: {val_loss:.4f}\n"
               f"val dice: {val_dice * 100:.2f}\n"
               f"val miou: {val_miou * 100:.2f}")
@@ -161,6 +162,6 @@ def train():
 
 
 if __name__ == '__main__':
-    if not os.path.exists("./save_weights"):
-        os.mkdir("./save_weights")
+    os.makedirs("./save_weights", exist_ok=True)
+    os.makedirs("./log", exist_ok=True)
     train()
