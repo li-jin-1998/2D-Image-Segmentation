@@ -6,7 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from torchvision import models, ops
-from torchvision.models import shufflenet_v2_x1_0
+from torchvision.models import shufflenet_v2_x1_0, mobilenet_v2
+
 nonlinearity = partial(F.relu, inplace=True)
 
 
@@ -100,7 +101,7 @@ class ShuffleUNet(nn.Module):
     def __init__(self, num_classes, pretrain_backbone: bool = False):
         super(ShuffleUNet, self).__init__()
 
-        self.stage_out_channels = [24,24,116,232,464]
+        self.stage_out_channels = [24, 24, 116, 232, 464]
         backbone = shufflenet_v2_x1_0(pretrained=pretrain_backbone)
         self.firstconv = backbone.conv1
         self.firstmaxpool = backbone.maxpool
@@ -110,10 +111,10 @@ class ShuffleUNet(nn.Module):
         # self.encoder4 = backbone.conv5
 
         self.up1 = DecoderBlock(self.stage_out_channels[4], self.stage_out_channels[3])
-        self.up2 = DecoderBlock(self.stage_out_channels[3] , self.stage_out_channels[2])
-        self.up3 = DecoderBlock(self.stage_out_channels[2] , self.stage_out_channels[1])
-        self.up4 = DecoderBlock(self.stage_out_channels[1] , self.stage_out_channels[0])
-        self.outconv = OutConv(self.stage_out_channels[0] , num_classes=num_classes)
+        self.up2 = DecoderBlock(self.stage_out_channels[3], self.stage_out_channels[2])
+        self.up3 = DecoderBlock(self.stage_out_channels[2], self.stage_out_channels[1])
+        self.up4 = DecoderBlock(self.stage_out_channels[1], self.stage_out_channels[0])
+        self.outconv = OutConv(self.stage_out_channels[0], num_classes=num_classes)
 
         from network.PSAM import PPM
         self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 8, [2, 3, 5, 6])
@@ -131,10 +132,10 @@ class ShuffleUNet(nn.Module):
         # e4 = self.PPM(e4)
 
         # decoder
-        print(x.shape,e0.shape,e1.shape,e2.shape,e3.shape)
-        d4 = self.up1(e3)+e2
-        d3 = self.up2(d4)+e1
-        d2 = self.up3(d3)+e0
+        print(x.shape, e0.shape, e1.shape, e2.shape, e3.shape)
+        d4 = self.up1(e3) + e2
+        d3 = self.up2(d4) + e1
+        d2 = self.up3(d3) + e0
         d1 = self.up4(d2)
         out = self.outconv(d1)
 
@@ -165,7 +166,6 @@ class MobileV2UNet(nn.Module):
         self.outconv = OutConv(self.stage_out_channels[0] * 2, num_classes=num_classes)
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        input_shape = x.shape[-2:]
         backbone_out = self.backbone(x)
         # encoder
         e0 = backbone_out['stage0']

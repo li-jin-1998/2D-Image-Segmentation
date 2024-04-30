@@ -27,10 +27,8 @@ def train():
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    # train_dataset = MyDataset(args.data_path + "/train", args.image_size)
-    # val_dataset = MyDataset(args.data_path + "/test", args.image_size)
-    train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    train_dataset = MyDataset(args.data_path + "/data", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -45,6 +43,8 @@ def train():
                                              pin_memory=True)
 
     model = get_model(args)
+    # model = torch.compile(model, mode="reduce-overhead")
+    # print('compile model.')
     # for k, v in model.named_parameters():
     #     # print("当前参数名称 {}".format(k))
     #     v.requires_grad = True
@@ -99,6 +99,7 @@ def train():
                                                          num_classes=num_classes)
 
         print(f"train_loss: {train_loss:.4f}\n"
+              f"train_miou: {train_miou:.4f}\n"
               f"val_loss: {val_loss:.4f}\n"
               f"val dice: {val_dice * 100:.2f}\n"
               f"val miou: {val_miou * 100:.2f}")
@@ -161,6 +162,6 @@ def train():
 
 
 if __name__ == '__main__':
-    if not os.path.exists("./save_weights"):
-        os.mkdir("./save_weights")
+    os.makedirs("./save_weights", exist_ok=True)
+    os.makedirs("./log", exist_ok=True)
     train()

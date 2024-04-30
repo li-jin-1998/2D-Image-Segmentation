@@ -35,12 +35,11 @@ def evaluate(epoch_num, model, data_loader, device, num_classes):
     val_loss = []
     with torch.no_grad():
         data_loader = tqdm.tqdm(data_loader, file=sys.stdout)
-        for image, target in data_loader:
-            image, target = image.to(device), target.to(device)
-
-            output = model(image)
-            loss = criterion(output, target,
-                             num_classes=num_classes)
+        for image, depth, target in data_loader:
+            image, depth, target = image.to(device), depth.to(device), target.to(device)
+            output = model(image, depth)
+            # output = model(image)
+            loss = criterion(output, target, num_classes=num_classes)
             if isinstance(output, dict):
                 output = output['out']
             confmat.update(target.flatten(), output.argmax(1).flatten())
@@ -62,10 +61,11 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
 
     train_loss = []
     data_loader = tqdm.tqdm(data_loader, file=sys.stdout)
-    for image, target in data_loader:
-        image, target = image.to(device), target.to(device)
+    for image, depth, target in data_loader:
+        image, depth, target = image.to(device), depth.to(device), target.to(device)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
-            output = model(image)
+            output = model(image, depth)
+            # output = model(image)
             loss = criterion(output, target, num_classes=num_classes)
 
         optimizer.zero_grad()

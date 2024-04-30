@@ -44,23 +44,22 @@ def get_model(args):
         from network.efficientnet_unet import EfficientUNet
         model = EfficientUNet(num_classes=args.num_classes, pretrain_backbone=True,
                               model_name=args.arch).to(device)
-    if args.arch == 'efficientnet2':
-        from efficientunet import get_efficientunet_b1
-        model = get_efficientunet_b1(out_channels=args.num_classes, concat_input=True, pretrained=True).to(device)
-
+    if args.arch == 'RedNet':
+        from network.RedNet import RedNet
+        model = RedNet(num_classes=args.num_classes,pretrained=True).to(device)
     return model
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
-                        help='unet/u2net/deeplab/mobilenet/efficientnet')
-    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset13/data", help="root")
-    parser.add_argument("--num_classes", default=5, type=int)
+                        help='unet/u2net/deeplab/mobilenet/efficientnet/RedNet')
+    parser.add_argument("--data_path", default="/mnt/algo_storage_server/RangeImageSeg/Dataset", help="root")
+    parser.add_argument("--num_classes", default=4, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
-    parser.add_argument("-b", "--batch_size", default=64, type=int)
-    parser.add_argument("--epochs", default=300, type=int, metavar="N",
+    parser.add_argument("-b", "--batch_size", default=32, type=int)
+    parser.add_argument("--epochs", default=100, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
