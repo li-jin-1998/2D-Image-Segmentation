@@ -6,70 +6,44 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 import os
 
-import PIL.Image
-
 torch.manual_seed(3407)
 
 from preprocess import pre_process
 
-transform = transforms.Compose([
-    transforms.ToTensor(),  # 将图片转换为Tensor,归一化至[0,1]
-    # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-])
-
 
 class MyDataset(Dataset):
     def __init__(self, path, image_size):
-        # self.images = torch.tensor(np.load(image_path))  # 加载npy数据
-        # self.masks = torch.tensor(np.load(mask_path))
         self.path = path
         self.image_size = image_size
-        self.image_paths = os.listdir(path + '/image')
-        self.mask_paths = os.listdir(path + '/mask')
-
-        # self.transforms = transform
+        self.image_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'image' in p]
+        self.mask_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'mask' in p]
+        self.depth_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'depth' in p]
+        assert len(self.image_paths) == len(self.mask_paths) == len(self.depth_paths)
 
     def __getitem__(self, index):
-        image_path = os.path.join(self.path, 'image', self.image_paths[index])
-        mask_path = os.path.join(self.path, 'mask', self.mask_paths[index])
+        image, depth, mask = pre_process(self.image_paths[index], self.depth_paths[index],
+                                         self.mask_paths[index], self.image_size)
+        # image = np.concatenate((image, depth[..., np.newaxis]), axis=2)
 
-        image, mask = pre_process(image_path, mask_path, self.image_size)
+        depth = torch.Tensor(depth[..., np.newaxis])
+        depth = depth.permute(2, 0, 1)
 
-        # if self.transforms is not None:
-        #     image = self.transforms(image)
         image = torch.Tensor(image)
         image = image.permute(2, 0, 1)
-        # mask = torch.Tensor(mask)
-        # mask = self.transforms(mask)
-        return image, mask
+        return image, depth, mask
 
     def __len__(self):
         return len(self.image_paths)
 
 
-def compute_weights(masks_path):
-    # calculate the weights of different classes based on train samples
-    masks = np.load(masks_path)
-    sum_0 = (np.sum(masks == 0))
-    sum_1 = (np.sum(masks == 1))
-    sum_2 = (np.sum(masks == 2))
-    print(sum_0, " ", sum_1, " ", sum_2)
-    sum_total = sum_0 + sum_1 + sum_2
-    weights_list = [(1 / sum_0) * sum_total / 2.0, (1 / sum_1) * sum_total / 2.0,
-                    (1 / sum_2) * sum_total / 2.0]
-    print('Weights for different classes are:', weights_list)
-
-
-def main():
-    dataset = MyDataset("data/train", 192)
-    data = DataLoader(dataset, batch_size=1, shuffle=True)
-    for i, j in data:
-        print(i.shape, j.shape)
-        print(np.min(i.numpy()), np.max(i.numpy()))
-        print(np.min(j.numpy()), np.max(j.numpy()))
-    # compute_weights("data/train/masks.npy")
-
-
 if __name__ == '__main__':
-    main()
+    from parse_args import parse_args
+
+    args = parse_args()
+    dataset = MyDataset(args.data_path + "/test", args.image_size)
+    data = DataLoader(dataset, batch_size=1, shuffle=True)
+    for i, j, k in data:
+        # print(i.shape, j.shape)
+        # print(np.min(i.numpy()), np.max(i.numpy()))
+        print(np.min(j.numpy()), np.max(j.numpy()))
     # print(torch.cuda.is_bf16_supported())

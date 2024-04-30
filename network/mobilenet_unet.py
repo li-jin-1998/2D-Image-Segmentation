@@ -7,8 +7,6 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision import models, ops
 from torchvision.models import mobilenet_v3_large, mobilenet_v2, mobilenet_v3_small
-from network.ACBlock import ACBlock
-from network.FRN import FRN
 
 nonlinearity = partial(F.relu, inplace=True)
 
