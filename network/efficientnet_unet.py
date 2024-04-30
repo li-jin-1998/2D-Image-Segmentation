@@ -60,8 +60,8 @@ class OutConv(nn.Sequential):
             nn.Conv2d(middle_channels, num_classes, kernel_size=3, stride=1, padding=1)
         )
 
-    def forward(self, input):
-        return self.conv(input)
+    def forward(self, x):
+        return self.conv(x)
 
 
 class Conv(nn.Module):
@@ -73,8 +73,8 @@ class Conv(nn.Module):
             activation_layer
         )
 
-    def forward(self, input):
-        return self.conv(input)
+    def forward(self, x):
+        return self.conv(x)
 
 
 class Conv2(nn.Module):
@@ -90,9 +90,9 @@ class Conv2(nn.Module):
             activation_layer
         )
 
-    def forward(self, input):
-        x1 = self.conv1(input)
-        x2 = self.conv2(input)
+    def forward(self, x):
+        x1 = self.conv1(x)
+        x2 = self.conv2(x)
         return torch.cat([x1, x2], dim=1)
 
 
@@ -106,8 +106,8 @@ class DeformConv(nn.Module):
             nn.LeakyReLU(0.1, inplace=True)
         )
 
-    def forward(self, input):
-        return self.conv(input)
+    def forward(self, x):
+        return self.conv(x)
 
 
 class UpConv(nn.Module):
@@ -250,5 +250,5 @@ class EfficientUNet(nn.Module):
 
 if __name__ == '__main__':
     model = EfficientUNet(num_classes=3, pretrain_backbone=True,
-                          model_name='efficientnet_v2_s').to("cuda")
+                          model_name='efficientnet_b2').to("cuda")
     summary(model, (3, 192, 192))
