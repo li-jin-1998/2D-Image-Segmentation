@@ -1,13 +1,10 @@
-import torch
-import numpy as np
-from torchvision import transforms
-from torch.utils.data import Dataset
 import os
 
+import numpy as np
+import torch
+from torch.utils.data import Dataset
 
 torch.manual_seed(1)  # reproducible
-
-
 
 
 class MyDataset(Dataset):
@@ -17,7 +14,6 @@ class MyDataset(Dataset):
         # self.transforms = transform  # 转为tensor形式
 
     def __getitem__(self, index):
-
         image = self.images[index, :, :, :]  # 读取每一个npy的数据
         image = image.permute(2, 0, 1)
         mask = self.masks[index, :, :]
@@ -31,25 +27,33 @@ class MyDataset(Dataset):
 def compute_weights(masks_path):
     # calculate the weights of different classes based on train samples
     masks = np.load(masks_path)
-    sum_0 = (np.sum(masks == 0))
-    sum_1 = (np.sum(masks == 1))
-    sum_2 = (np.sum(masks == 2))
-    print(sum_0, " ", sum_1, " ", sum_2)
-    sum_total = sum_0 + sum_1 + sum_2
-    weights_list = [(1 / sum_0) * sum_total / 2.0, (1 / sum_1) * sum_total / 2.0,
-                    (1 / sum_2) * sum_total / 2.0]
+    max_value = np.max(masks)
+    sum_total = 0
+    sum = np.zeros(max_value)
+    for i in range(max_value):
+        sum[i] = np.sum(masks == i)
+        sum_total += sum[i]
+    print(sum)
+    weights_list = []
+    for s in sum:
+        weights_list.append((1 / s) * sum_total)
     print('Weights for different classes are:', weights_list)
 
 
-def main():
-    data = np.load("data/train/masks.npy")
-    print(data.shape)
-    # dataset = MyDataset("data/train/images.npy", "data/train/masks.npy")
-    # data = DataLoader(dataset, batch_size=1, shuffle=True)
-    # for i,j in data:
-    #     print(i.shape)
-    # compute_weights("data/train/masks.npy")
-
-
 if __name__ == '__main__':
-    main()
+    from parse_args import parse_args
+
+    args = parse_args()
+
+    images_npy_path = os.path.join(args.data_path, 'augmentation_test', 'images.npy')
+    masks_npy_path = os.path.join(args.data_path, 'augmentation_test', 'masks.npy')
+
+    data = np.load(masks_npy_path)
+    print(data.shape)
+
+    # dataset = MyDataset(images_npy_path, masks_npy_path)
+    # data = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
+    # for image, target in data:
+    #     print(image.shape, target.shape)
+
+    # compute_weights(masks_npy_path)
