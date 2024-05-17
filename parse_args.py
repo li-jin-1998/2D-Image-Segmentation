@@ -53,9 +53,9 @@ def get_model(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
-    parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b2',
+    parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
                         help='unet/u2net/deeplab/mobilenet/efficientnet/efficientnet_v2_s')
-    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset13/data", help="root")
+    parser.add_argument("--data_path", default="/mnt/algo_storage_server/UNet/Dataset14/data", help="root")
     parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")

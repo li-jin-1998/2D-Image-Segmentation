@@ -28,11 +28,9 @@ Personal code for segmentation.
 
 - **[3D-SIS](https://github.com/Sekunde/3D-SIS)**
 
+- **[SGNet](https://github.com/LinZhuoChen/SGNet)**
+
 ### Paper with code
 
-- *
-  *[Semantic Segmentation on NYU Depth v2](https://paperswithcode.com/sota/semantic-segmentation-on-nyu-depth-v2?tag_filter=0)
-  **
-
-
+- **[Semantic Segmentation on NYU Depth v2](https://paperswithcode.com/sota/semantic-segmentation-on-nyu-depth-v2?tag_filter=0)**
 

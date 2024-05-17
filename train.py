@@ -32,7 +32,7 @@ def train():
     train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
     val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
 
-    num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0])
+    num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=batch_size,
                                                num_workers=num_workers,
@@ -99,10 +99,10 @@ def train():
                                                          num_classes=num_classes)
 
         print(f"train_loss: {train_loss:.4f}\n"
-              f"train_miou: {train_miou:.4f}\n"
+              f"train_miou: {train_miou * 100:.2f}\n"
               f"val_loss: {val_loss:.4f}\n"
-              f"val dice: {val_dice * 100:.2f}\n"
-              f"val miou: {val_miou * 100:.2f}")
+              f"val_dice: {val_dice * 100:.2f}\n"
+              f"val_miou: {val_miou * 100:.2f}")
         val_info = str(confmat)
         # print(val_info)
         train_losses.append(train_loss)
@@ -121,11 +121,12 @@ def train():
         with open(results_file, "a") as f:
             # 记录每个epoch对应的train_loss、lr以及验证集各指标
             train_info = f"[epoch: {epoch}]\n" \
-                         f"train_loss: {train_loss:.4f}\n" \
-                         f"val_loss: {val_loss:.4f}\n" \
                          f"lr: {lr:.6f}\n" \
-                         f"dice: {val_dice * 100:.2f}\n" \
-                         f"miou: {val_miou * 100:.2f}\n"
+                         f"train_loss: {train_loss:.4f}\n" \
+                         f"train_miou: {train_miou * 100:.2f}\n" \
+                         f"val_loss: {val_loss:.4f}\n" \
+                         f"val_dice: {val_dice * 100:.2f}\n" \
+                         f"val_miou: {val_miou * 100:.2f}"
             f.write(train_info + val_info + "\n\n")
         torch.save(model.state_dict(), get_latest_weight_path(args))
 
