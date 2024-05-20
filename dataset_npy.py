@@ -1,10 +1,12 @@
 import os
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-torch.manual_seed(1)  # reproducible
+torch.manual_seed(3407)  # reproducible
 
 
 class MyDataset(Dataset):
@@ -40,6 +42,32 @@ def compute_weights(masks_path):
     print('Weights for different classes are:', weights_list)
 
 
+def plot_data_loader_image(data_loader):
+    batch_size = data_loader.batch_size
+    plot_num = min(batch_size, 8)
+
+    for image, target in data_loader:
+        plot_images = []
+        plot_masks = []
+        for i in range(plot_num):
+            img = image[i].numpy().transpose(1, 2, 0)
+            img = (img + 1) * 127.5
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+            plot_masks.append(target[i].item())
+            plot_images.append(img)
+
+        fig, axes = plt.subplots(4, 4, figsize=(10, 10))
+        axes = axes.flatten()
+        for img, lab, ax in zip(plot_images, plot_masks, axes):
+            ax.imshow(img)
+            ax.axis("off")
+            ax.imshow(lab)
+            ax.axis("off")
+        plt.tight_layout()
+        plt.show()
+
+
 if __name__ == '__main__':
     from parse_args import parse_args
 
@@ -53,6 +81,7 @@ if __name__ == '__main__':
 
     # dataset = MyDataset(images_npy_path, masks_npy_path)
     # data = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
+    # plot_data_loader_image(data)
     # for image, target in data:
     #     print(image.shape, target.shape)
 
