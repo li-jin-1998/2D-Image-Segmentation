@@ -1,11 +1,11 @@
 import os
+import time
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sympy.physics.units import time
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 torch.manual_seed(3407)  # reproducible
 
@@ -100,16 +100,16 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    images_npy_path = os.path.join(args.data_path, 'augmentation_test', 'images.npy')
-    masks_npy_path = os.path.join(args.data_path, 'augmentation_test', 'masks.npy')
+    # images_npy_path = os.path.join(args.data_path, 'augmentation_test', 'images.npy')
+    # masks_npy_path = os.path.join(args.data_path, 'augmentation_test', 'masks.npy')
+    # data = np.load(masks_npy_path)
+    # print(data.shape)
+    # compute_weights(masks_npy_path)
 
-    data = np.load(masks_npy_path)
-    print(data.shape)
 
-    # dataset = MyDataset(images_npy_path, masks_npy_path)
-    # data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
-    # plot_data_loader_image(data_loader)
+    dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'))
+    data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
+    plot_data_loader_image(data_loader)
     # for image, target in data_loader:
     #     print(image.shape, target.shape)
 
-    # compute_weights(masks_npy_path)

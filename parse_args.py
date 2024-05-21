@@ -64,8 +64,8 @@ def parse_args():
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
-    parser.add_argument('--resume', default=1, help='resume from checkpoint')
-    parser.add_argument('--deep_supervision', default=False, help='deep_supervision training')
+    parser.add_argument('--resume', default=0, help='resume from checkpoint')
+    parser.add_argument('--deep_supervision', default=False, help='deep supervision training')
     parser.add_argument('--multi_scale', default=False, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',
                         help='start epoch')
