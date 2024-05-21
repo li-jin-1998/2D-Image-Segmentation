@@ -3,6 +3,7 @@ from typing import Dict
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 from torchsummary import summary
 from torchvision import ops
@@ -172,7 +173,7 @@ class DecoderBlock(nn.Module):
 
 
 class EfficientUNet(nn.Module):
-    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None):
+    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None, deep_supervision=False):
         super(EfficientUNet, self).__init__()
         if model_name == 'efficientnet_b0':
             backbone = efficientnet.efficientnet_b0(pretrained=pretrain_backbone)
@@ -217,6 +218,13 @@ class EfficientUNet(nn.Module):
         self.up4 = DecoderBlock(self.stage_out_channels[1] * 2, self.stage_out_channels[0], drop[3])
         self.outconv = OutConv(self.stage_out_channels[0] * 2, num_classes=num_classes)
 
+        self.deep_supervision = deep_supervision
+        if self.deep_supervision:
+            self.auxiliary0 = nn.Conv2d(self.stage_out_channels[0] * 2, num_classes, kernel_size=1)
+            self.auxiliary1 = nn.Conv2d(self.stage_out_channels[1] * 2, num_classes, kernel_size=1)
+            self.auxiliary2 = nn.Conv2d(self.stage_out_channels[2] * 2, num_classes, kernel_size=1)
+            self.auxiliary3 = nn.Conv2d(self.stage_out_channels[3] * 2, num_classes, kernel_size=1)
+
         from network.PSAM import PSAModule
         self.PPM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
@@ -244,11 +252,23 @@ class EfficientUNet(nn.Module):
         d1 = self.up4(d2, e0)
         out = self.outconv(d1)
         if is_convert_onnx:
-            out = out.permute(0, 2, 3, 1)
+            return out.permute(0, 2, 3, 1)
+        if self.training and self.deep_supervision:
+            # print(d1.shape, d2.shape, d3.shape, d4.shape)
+            # print(self.auxiliary0.weight.shape, self.auxiliary1.weight.shape, self.auxiliary2.weight.shape, )
+            aux_output0 = F.interpolate(self.auxiliary0(d1), scale_factor=2, mode='bilinear', align_corners=True)
+            aux_output1 = F.interpolate(self.auxiliary1(d2), scale_factor=4, mode='bilinear', align_corners=True)
+            aux_output2 = F.interpolate(self.auxiliary2(d3), scale_factor=8, mode='bilinear', align_corners=True)
+            aux_output3 = F.interpolate(self.auxiliary3(d4), scale_factor=16, mode='bilinear', align_corners=True)
+            # print(out.shape, aux_output0.shape, aux_output1.shape, aux_output2.shape, aux_output3.shape,
+            #       aux_output3.shape)
+            return {'out': out, 'aux_output0': aux_output0, 'aux_output1': aux_output1,
+                    'aux_output2': aux_output2, 'aux_output3': aux_output3}
+
         return {'out': out}
 
 
 if __name__ == '__main__':
     model = EfficientUNet(num_classes=3, pretrain_backbone=True,
-                          model_name='efficientnet_b2').to("cuda")
+                          model_name='efficientnet_b1', deep_supervision=True).to("cuda")
     summary(model, (3, 192, 192))

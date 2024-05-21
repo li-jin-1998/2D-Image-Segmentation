@@ -7,6 +7,7 @@ import datetime
 import torch
 
 from torch.utils.tensorboard import SummaryWriter
+from torch.utils.data import DataLoader
 
 from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
 from dataset import MyDataset
@@ -29,20 +30,20 @@ def train():
 
     # train_dataset = MyDataset(args.data_path + "/train", args.image_size)
     # val_dataset = MyDataset(args.data_path + "/test", args.image_size)
-    train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
+    val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=batch_size,
-                                               num_workers=num_workers,
-                                               shuffle=True,
-                                               pin_memory=True)
+    train_loader = DataLoader(train_dataset,
+                              batch_size=batch_size,
+                              num_workers=num_workers,
+                              shuffle=True,
+                              pin_memory=True)
 
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=batch_size,
-                                             num_workers=num_workers,
-                                             pin_memory=True)
+    val_loader = DataLoader(val_dataset,
+                            batch_size=batch_size,
+                            num_workers=num_workers,
+                            pin_memory=True)
 
     model = get_model(args)
     # for k, v in model.named_parameters():

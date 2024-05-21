@@ -17,14 +17,18 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
     for name, x in inputs.items():
         target = build_target(target, num_classes)
         a = 0.3
-        loss = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
+        losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
         + a * dice_loss(x, target, multiclass=True)
         # Flooding
         # b = 0.28
         # loss = (loss - b).abs() + b
-        losses[name] = loss
-
-    return losses['out']
+        # losses[name] = loss
+    total_loss = losses['out']
+    if len(losses) > 1:
+        for k in losses.keys():
+            if k != 'out':
+                total_loss += 0.4 * losses[k]
+    return total_loss
 
 
 def evaluate(epoch_num, model, data_loader, device, num_classes):
