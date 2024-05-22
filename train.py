@@ -9,8 +9,8 @@ import torch
 from torch.utils.data import DataLoader
 
 from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
-from dataset import MyDataset
-from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path
+from utils.dataset import MyDataset
+from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path, get_device
 
 
 # tensorboard --logdir=./runs --port=2000
@@ -20,13 +20,15 @@ def train():
     # print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:2000/')
     # tb_writer = SummaryWriter()
 
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    device = get_device()
     batch_size = args.batch_size
     num_classes = args.num_classes
 
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
+    # train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
+    # val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
     train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
     val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
 
@@ -124,7 +126,7 @@ def train():
                          f"train_miou: {train_miou * 100:.2f}\n" \
                          f"val_loss: {val_loss:.4f}\n" \
                          f"val_dice: {val_dice * 100:.2f}\n" \
-                         f"val_miou: {val_miou * 100:.2f}"
+                         f"val_miou: {val_miou * 100:.2f}\n"
             f.write(train_info + val_info + "\n\n")
         torch.save(model.state_dict(), get_latest_weight_path(args))
 

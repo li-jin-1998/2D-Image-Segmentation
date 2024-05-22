@@ -1,7 +1,6 @@
 import os
 import time
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -70,8 +69,7 @@ def compute_weights(masks_path):
 
 
 def plot_data_loader_image(data_loader):
-    batch_size = data_loader.batch_size
-    plot_num = min(batch_size, 8)
+    plot_num = data_loader.batch_size
 
     for image, target in data_loader:
         plot_images = []
@@ -79,18 +77,21 @@ def plot_data_loader_image(data_loader):
         for i in range(plot_num):
             img = image[i].numpy().transpose(1, 2, 0)
             img = (img + 1) * 127.5
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            img = np.uint8(img)
 
-            plot_masks.append(target[i].item())
+            plot_masks.append(target[i])
             plot_images.append(img)
 
-        fig, axes = plt.subplots(4, 4, figsize=(10, 10))
+        fig, axes = plt.subplots(plot_num // 2, 4, figsize=(10, 10))
         axes = axes.flatten()
-        for img, lab, ax in zip(plot_images, plot_masks, axes):
-            ax.imshow(img)
-            ax.axis("off")
-            ax.imshow(lab)
-            ax.axis("off")
+        j = 0
+        for img, lab in zip(plot_images, plot_masks):
+            axes[j].imshow(img)
+            axes[j].axis("off")
+            axes[j + 1].imshow(lab)
+            axes[j + 1].axis("off")
+            j += 2
         plt.tight_layout()
         plt.show()
 
@@ -108,7 +109,7 @@ if __name__ == '__main__':
 
 
     dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'))
-    data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
     plot_data_loader_image(data_loader)
     # for image, target in data_loader:
     #     print(image.shape, target.shape)

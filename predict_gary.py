@@ -33,7 +33,7 @@ def predict_gray():
 
     # torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
 
-    predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
+    predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::40]
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::4]
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/image/*.*")[::20]
     predict_image_names.sort()
@@ -68,6 +68,8 @@ def predict_gray():
             dst = os.path.join(result_path, os.path.splitext(os.path.basename(img_path))[0] + "_predict.png")
             cv2.imwrite(dst, predict_result)
             shutil.copy(str(img_path), dst.replace('predict', 'image'))
+            shutil.copy(str(img_path).replace('image/', 'mask/').replace("IMAGE", "MASK"),
+                        dst.replace('predict', ' mask'))
 
     total_time = time.time() - start_time
     print("time {}s, fps {}".format(total_time, len(predict_image_names) / total_time))

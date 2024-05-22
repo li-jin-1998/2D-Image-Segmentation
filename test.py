@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from utils.train_and_eval import evaluate
-from dataset import MyDataset
+from utils.dataset import MyDataset
 from parse_args import parse_args, get_model, get_device
 
 

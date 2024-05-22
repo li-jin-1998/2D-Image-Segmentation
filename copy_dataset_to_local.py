@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 
-src = r"/mnt/algo_storage_server/UNet/Dataset14/data/augmentation_train/*.npy"
+src = r"/mnt/algo-storage-server/UNet/Dataset14/data/augmentation_train/*.npy"
 dst = r"./data/augmentation_train"
 
 os.makedirs(dst, exist_ok=True)
