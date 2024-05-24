@@ -3,7 +3,7 @@ import os
 import numpy as np
 import tqdm
 
-from preprocess import pre_process
+from utils.preprocess import pre_process
 
 
 def save_batch(images, masks, batch_index, output_dir):

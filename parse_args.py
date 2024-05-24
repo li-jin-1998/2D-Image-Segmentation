@@ -2,6 +2,12 @@ import argparse
 
 import torch
 
+from network.UDTransNet.ETransUNet import ETransUNet
+from network.UDTransNet.UDTransNet import UDTransNet
+from network.UNet import UNet
+from network.efficientnet_unet import EfficientUNet
+from network.mobilenet_unet import MobileV3UNet
+
 
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -16,9 +22,10 @@ def get_best_weight_path(args, verbose=True):
     return weights_path
 
 
-def get_latest_weight_path(args):
+def get_latest_weight_path(args, verbose=False):
     weights_path = "save_weights/{}_{}_latest_model.pth".format(args.arch, args.deep_supervision)
-    # print(weights_path)
+    if verbose:
+        print("latest weight: ", weights_path)
     return weights_path
 
 
@@ -36,25 +43,21 @@ def get_model(args):
     print('**************************')
     device = get_device()
     if args.arch == 'unet':
-        from network.UNet import UNet
         model = UNet(in_channels=3, num_classes=args.num_classes, base_c=32).to(device)
-    if args.arch == 'mobilenet':
-        from network.mobilenet_unet import MobileV3UNet
+    elif args.arch == 'mobilenet':
         model = MobileV3UNet(num_classes=args.num_classes, pretrain_backbone=True).to(device)
-    if args.arch == 'efficientnet' or args.arch in efficientnet_dict:
-        from network.efficientnet_unet import EfficientUNet
+    elif args.arch == 'efficientnet' or args.arch in efficientnet_dict:
         model = EfficientUNet(num_classes=args.num_classes, pretrain_backbone=True,
                               model_name=args.arch, deep_supervision=args.deep_supervision).to(device)
     # if args.arch == 'efficientnet2':
     #     from efficientunet import get_efficientunet_b1
     #     model = get_efficientunet_b1(out_channels=args.num_classes, concat_input=True, pretrained=True).to(device)
-    if args.arch == 'UDTransNet':
-        from network.UDTransNet.UDTransNet import UDTransNet
+    elif args.arch == 'UDTransNet':
         model = UDTransNet(n_channels=3, n_classes=args.num_classes, img_size=args.image_size).to(device)
-    if args.arch == 'ETransUNet':
-        from network.UDTransNet.ETransUNet import ETransUNet
+    elif args.arch == 'ETransUNet':
         model = ETransUNet(n_channels=3, n_classes=args.num_classes, img_size=args.image_size).to(device)
-
+    else:
+        raise ValueError('arch error')
     return model
 
 
