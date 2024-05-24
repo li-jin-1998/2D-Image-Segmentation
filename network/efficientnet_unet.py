@@ -134,7 +134,7 @@ class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock, self).__init__()
 
-        middle_channels = int(in_channels * 1.5)
+        middle_channels = int(in_channels * 2)
 
         self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
         self.deconv2 = UpConv(middle_channels, middle_channels)

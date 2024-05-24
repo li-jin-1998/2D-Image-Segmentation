@@ -12,7 +12,7 @@ import tqdm
 from PIL import Image
 
 from parse_args import parse_args, get_model
-from preprocess import preprocessing, COLORS
+from utils.preprocess import preprocessing, COLORS
 
 
 def predict_file():

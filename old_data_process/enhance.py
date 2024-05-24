@@ -1,6 +1,6 @@
 from PIL import Image
 
-image = Image.open('./test.png')
+image = Image.open('../test.png')
 image.show()
 
 def enhance_h(image, hue=6):
