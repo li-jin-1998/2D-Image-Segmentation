@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 torch.manual_seed(3407)  # reproducible
 
 
-class MyDataset(Dataset):
+class MyDatasetNpy(Dataset):
     def __init__(self, npy_dir):
         self.npy_dir = npy_dir
         self.image_files = sorted(
@@ -102,13 +102,21 @@ if __name__ == '__main__':
     args = parse_args()
 
     # images_npy_path = os.path.join(args.data_path, 'augmentation_test', 'images.npy')
-    # masks_npy_path = os.path.join(args.data_path, 'augmentation_test', 'masks.npy')
+    # masks_npy_path = os.path.join(args.data_path, 'augmentation_test', 'masks_batch_0.npy')
     # data = np.load(masks_npy_path)
     # print(data.shape)
     # compute_weights(masks_npy_path)
 
+    dataset = MyDatasetNpy(args.data_path + "/augmentation_test")
+    data = DataLoader(dataset, batch_size=1, shuffle=True)
+    for i, j in data:
+        print(i.shape, j.shape)
+        # print(j)
+        # print(np.min(i.numpy()), np.max(i.numpy()))
+        # print(np.min(j.numpy()), np.max(j.numpy()))
 
-    dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'))
+
+    dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_test'))
     data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
     plot_data_loader_image(data_loader)
     # for image, target in data_loader:

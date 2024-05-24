@@ -1,10 +1,12 @@
 import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from tqdm import tqdm
 
 torch.manual_seed(3407)
 
@@ -25,14 +27,25 @@ class MyDataset(Dataset):
         self.image_paths = sorted(os.listdir(path + '/image')[::])
         self.mask_paths = sorted(os.listdir(path + '/mask')[::])
         # self.transforms = transform
+        self.images = []
+        self.masks = []
+        # self.load_all_images()
 
+    def load_all_images(self):
+        print('loading all images...')
+        for i in tqdm(range(len(self.image_paths)), file=sys.stdout):
+            image_path = os.path.join(self.path, 'image', self.image_paths[i])
+            mask_path = os.path.join(self.path, 'mask', self.mask_paths[i])
+            image, mask = pre_process(image_path, mask_path, self.image_size)
+            self.images.append(image)
+            self.masks.append(mask)
+        print('loading all images finished!')
     def __getitem__(self, index):
         image_path = os.path.join(self.path, 'image', self.image_paths[index])
         mask_path = os.path.join(self.path, 'mask', self.mask_paths[index])
-        # print(image_path)
-        # print(mask_path)
-
         image, mask = pre_process(image_path, mask_path, self.image_size)
+
+        # image, mask = self.images[index], self.masks[index]
 
         # if self.transforms is not None:
         #     image = self.transforms(image)
@@ -94,10 +107,10 @@ if __name__ == '__main__':
     # dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
     # data = DataLoader(dataset, batch_size=1, shuffle=True)
     # for i, j in data:
-        # print(i.shape, j.shape)
-        # print(j)
-        # print(np.min(i.numpy()), np.max(i.numpy()))
-        # print(np.min(j.numpy()), np.max(j.numpy()))
+    # print(i.shape, j.shape)
+    # print(j)
+    # print(np.min(i.numpy()), np.max(i.numpy()))
+    # print(np.min(j.numpy()), np.max(j.numpy()))
     dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
     data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
     plot_data_loader_image(data_loader)

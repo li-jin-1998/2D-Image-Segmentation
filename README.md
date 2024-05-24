@@ -16,6 +16,8 @@ Personal code for segmentation.
 
 - **[UCTransNet](https://github.com/mcgregorwwww/uctransnet)**
 
+- **[UDTransNet](https://github.com/McGregorWwww/UDTransNet)**
+
 ### RGB-D
 
 - **[RedNet](https://github.com/JindongJiang/RedNet)**

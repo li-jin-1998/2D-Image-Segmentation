@@ -1,16 +1,13 @@
-import os
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-
-import time
 import datetime
-import torch
+import os
+import time
 
+import torch
 from torch.utils.data import DataLoader
 
-from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
-from utils.dataset import MyDataset
 from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path, get_device
+from utils.dataset import MyDataset
+from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
 
 
 # tensorboard --logdir=./runs --port=2000
@@ -27,10 +24,12 @@ def train():
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    # train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
-    # val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
-    train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
-    val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
+    # train_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_train'))
+    # val_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_test'))
+    train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
+    val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
+    # train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
+    # val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = DataLoader(train_dataset,
@@ -55,7 +54,7 @@ def train():
     # summary(model, (3, args.image_size, args.image_size))
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-4)
     # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
@@ -99,7 +98,7 @@ def train():
                                                          num_classes=num_classes)
 
         print(f"train_loss: {train_loss:.4f}\n"
-              f"train_miou: {train_miou * 100:.2f}\n"
+              # f"train_miou: {train_miou * 100:.2f}\n"
               f"val_loss: {val_loss:.4f}\n"
               f"val_dice: {val_dice * 100:.2f}\n"
               f"val_miou: {val_miou * 100:.2f}")
@@ -123,7 +122,6 @@ def train():
             train_info = f"[epoch: {epoch}]\n" \
                          f"lr: {lr:.6f}\n" \
                          f"train_loss: {train_loss:.4f}\n" \
-                         f"train_miou: {train_miou * 100:.2f}\n" \
                          f"val_loss: {val_loss:.4f}\n" \
                          f"val_dice: {val_dice * 100:.2f}\n" \
                          f"val_miou: {val_miou * 100:.2f}\n"
@@ -163,6 +161,8 @@ def train():
 
 
 if __name__ == '__main__':
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+
     os.makedirs("./save_weights", exist_ok=True)
     os.makedirs("./log", exist_ok=True)
     train()

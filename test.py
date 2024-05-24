@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from utils.train_and_eval import evaluate
 from utils.dataset import MyDataset
-from parse_args import parse_args, get_model, get_device
+from parse_args import parse_args, get_model, get_device,get_best_weight_path
 
 
 def model_test():
@@ -20,7 +20,7 @@ def model_test():
     batch_size = args.batch_size
     num_classes = args.num_classes
 
-    val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     val_loader = DataLoader(val_dataset,
@@ -28,8 +28,8 @@ def model_test():
                             num_workers=num_workers,
                             pin_memory=True)
     model = get_model(args)
-    weights_path = "save_weights/{}_best_model.pth".format(args.arch)
-    print(weights_path)
+    weights_path = get_best_weight_path(args)
+    # print(weights_path)
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
     start_time = time.time()
 

@@ -9,14 +9,15 @@ def get_device():
     return device
 
 
-def get_best_weight_path(args):
-    weights_path = "save_weights/{}_best_model.pth".format(args.arch)
-    print("best weight: ", weights_path)
+def get_best_weight_path(args, verbose=True):
+    weights_path = "save_weights/{}_{}_best_model.pth".format(args.arch, args.deep_supervision)
+    if verbose:
+        print("best weight: ", weights_path)
     return weights_path
 
 
 def get_latest_weight_path(args):
-    weights_path = "save_weights/{}_latest_model.pth".format(args.arch)
+    weights_path = "save_weights/{}_{}_latest_model.pth".format(args.arch, args.deep_supervision)
     # print(weights_path)
     return weights_path
 
@@ -47,6 +48,12 @@ def get_model(args):
     # if args.arch == 'efficientnet2':
     #     from efficientunet import get_efficientunet_b1
     #     model = get_efficientunet_b1(out_channels=args.num_classes, concat_input=True, pretrained=True).to(device)
+    if args.arch == 'UDTransNet':
+        from network.UDTransNet.UDTransNet import UDTransNet
+        model = UDTransNet(n_channels=3, n_classes=args.num_classes, img_size=args.image_size).to(device)
+    if args.arch == 'ETransUNet':
+        from network.UDTransNet.ETransUNet import ETransUNet
+        model = ETransUNet(n_channels=3, n_classes=args.num_classes, img_size=args.image_size).to(device)
 
     return model
 
@@ -54,19 +61,20 @@ def get_model(args):
 def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
-                        help='unet/u2net/deeplab/mobilenet/efficientnet/efficientnet_v2_s')
+                        help='unet/mobilenet/efficientnet/efficientnet_v2_s/UDTransNet')
     # parser.add_argument("--data_path", default="/mnt/algo-storage-server/UNet/Dataset14/data", help="root")
-    parser.add_argument("--data_path", default="/home/lj/PycharmProjects/2D-image-Segmentation/dataset/data", help="root")
+    parser.add_argument("--data_path", default="/home/lj/PycharmProjects/2D-image-Segmentation/dataset/data",
+                        help="root")
     parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
-    parser.add_argument("-b", "--batch_size", default=64, type=int)
+    parser.add_argument("-b", "--batch_size", default=32, type=int)
     parser.add_argument("--epochs", default=300, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
     parser.add_argument('--resume', default=0, help='resume from checkpoint')
-    parser.add_argument('--deep_supervision', default=False, help='deep supervision training')
+    parser.add_argument('--deep_supervision', default=0, help='deep supervision training')
     parser.add_argument('--multi_scale', default=False, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',
                         help='start epoch')

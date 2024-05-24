@@ -46,6 +46,8 @@ def predict_gray():
     model.eval()  # 进入验证模式
     with torch.no_grad():
         for img_path in tqdm.tqdm(predict_image_names):
+            if 'ORIGIN' not in img_path:
+                continue
             # load image
             original_img = cv2.imread(img_path)
             original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
@@ -60,6 +62,7 @@ def predict_gray():
             output = model(image.to(device))
             if isinstance(output, dict):
                 output = output['out']
+                # output = output['aux_output0']
             prediction = output.argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)

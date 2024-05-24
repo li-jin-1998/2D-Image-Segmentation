@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torchsummary import summary
 from torchvision import ops
 from torchvision.models import efficientnet
 
@@ -46,8 +45,8 @@ class IntermediateLayerGetter(nn.ModuleDict):
         return out
 
 
-# activation_layer = nn.GELU()
-activation_layer = nn.LeakyReLU(0.1, inplace=True)
+activation_layer = nn.ReLU(inplace=True)
+# activation_layer = nn.LeakyReLU(0.1, inplace=True)
 
 
 class OutConv(nn.Sequential):
@@ -76,25 +75,6 @@ class Conv(nn.Module):
 
     def forward(self, x):
         return self.conv(x)
-
-
-class Conv2(nn.Module):
-    def __init__(self, in_ch, out_ch, kernel_size=3):
-        super(Conv2, self).__init__()
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch // 2, kernel_size=(3, 1), stride=1, padding=(1, 0), bias=False),
-            nn.BatchNorm2d(out_ch // 2),
-            activation_layer)
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch // 2, kernel_size=(1, 3), stride=1, padding=(0, 1), bias=False),
-            nn.BatchNorm2d(out_ch // 2),
-            activation_layer
-        )
-
-    def forward(self, x):
-        x1 = self.conv1(x)
-        x2 = self.conv2(x)
-        return torch.cat([x1, x2], dim=1)
 
 
 class DeformConv(nn.Module):
@@ -154,7 +134,7 @@ class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock, self).__init__()
 
-        middle_channels = int(in_channels * 2)
+        middle_channels = int(in_channels * 1.5)
 
         self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
         self.deconv2 = UpConv(middle_channels, middle_channels)
@@ -231,6 +211,7 @@ class EfficientUNet(nn.Module):
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         if is_convert_onnx:
+            print("convert onnx")
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
         # for i in range(5):
@@ -269,6 +250,8 @@ class EfficientUNet(nn.Module):
 
 
 if __name__ == '__main__':
+    from torchsummary import summary
+
     model = EfficientUNet(num_classes=3, pretrain_backbone=True,
                           model_name='efficientnet_b1', deep_supervision=True).to("cuda")
-    summary(model, (3, 192, 192))
+    summary(model, (3, 224, 224))
