@@ -20,7 +20,7 @@ def mask_postprocessing(mask, w, h):
     return mask
 
 
-def main():
+def predict_gray():
     args = parse_args()
     device = get_device()
 
@@ -33,7 +33,7 @@ def main():
 
     # torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
 
-    predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
+    predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::40]
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::4]
     # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/image/*.*")[::20]
     predict_image_names.sort()
@@ -46,6 +46,8 @@ def main():
     model.eval()  # 进入验证模式
     with torch.no_grad():
         for img_path in tqdm.tqdm(predict_image_names):
+            if 'ORIGIN' not in img_path:
+                continue
             # load image
             original_img = cv2.imread(img_path)
             original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
@@ -58,18 +60,23 @@ def main():
             image = torch.unsqueeze(image, dim=0)
 
             output = model(image.to(device))
-            prediction = output['out'].argmax(1).squeeze(0)
+            if isinstance(output, dict):
+                output = output['out']
+                # output = output['aux_output0']
+            prediction = output.argmax(1).squeeze(0)
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)
             predict_result = mask_postprocessing(prediction, original_img.shape[1], original_img.shape[0])
 
             dst = os.path.join(result_path, os.path.splitext(os.path.basename(img_path))[0] + "_predict.png")
             cv2.imwrite(dst, predict_result)
-            shutil.copy(str(img_path), dst.replace('predict', ' image'))
+            shutil.copy(str(img_path), dst.replace('predict', 'image'))
+            shutil.copy(str(img_path).replace('image/', 'mask/').replace("IMAGE", "MASK"),
+                        dst.replace('predict', ' mask'))
 
     total_time = time.time() - start_time
     print("time {}s, fps {}".format(total_time, len(predict_image_names) / total_time))
 
 
 if __name__ == '__main__':
-    main()
+    predict_gray()

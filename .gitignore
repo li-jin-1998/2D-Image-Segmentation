@@ -3,10 +3,13 @@ visualization/
 ./*.png
 *.png
 *.jpg
+runs/
+data/
 save_weights/
 onnx/
 */__pycache__
 log/
+dataset/
 
 
 # Byte-compiled / optimized / DLL files

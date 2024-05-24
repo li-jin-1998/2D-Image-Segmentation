@@ -1,42 +1,47 @@
-import os
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-import time
 import datetime
+import os
+import time
+
 import torch
+from torch.utils.data import DataLoader
 
+from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path, get_device
+from utils.dataset import MyDataset
 from utils.train_and_eval import train_one_epoch, evaluate, create_lr_scheduler
-from dataset import MyDataset
-from parse_args import parse_args, get_model, get_best_weight_path, get_latest_weight_path
 
 
+# tensorboard --logdir=./runs --port=2000
 def train():
     args = parse_args()
 
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    # print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:2000/')
+    # tb_writer = SummaryWriter()
+
+    device = get_device()
     batch_size = args.batch_size
     num_classes = args.num_classes
 
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    train_dataset = MyDataset(args.data_path + "/train", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
-    # train_dataset = MyDataset(args.data_path + "/augmentation_train", args.image_size)
-    # val_dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    # train_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_train'))
+    # val_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_test'))
+    train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
+    val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
+    # train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
+    # val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=batch_size,
-                                               num_workers=num_workers,
-                                               shuffle=True,
-                                               pin_memory=True)
+    train_loader = DataLoader(train_dataset,
+                              batch_size=batch_size,
+                              num_workers=num_workers,
+                              shuffle=True,
+                              pin_memory=True)
 
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=batch_size,
-                                             num_workers=num_workers,
-                                             pin_memory=True)
+    val_loader = DataLoader(val_dataset,
+                            batch_size=batch_size,
+                            num_workers=num_workers,
+                            pin_memory=True)
 
     model = get_model(args)
     # for k, v in model.named_parameters():
@@ -86,31 +91,40 @@ def train():
         print('-' * 20)
         print('Epoch {}/{} lr {:.6f}'.format(epoch, args.epochs, lr))
         print('-' * 20)
-        train_loss, lr = train_one_epoch(epoch, model, optimizer, train_loader, device, num_classes,
-                                         lr_scheduler=lr_scheduler, scaler=scaler)
+        train_loss, train_dice, train_miou, lr = train_one_epoch(epoch, model, optimizer, train_loader, device,
+                                                                 num_classes,
+                                                                 lr_scheduler=lr_scheduler, scaler=scaler)
         confmat, val_dice, val_loss, val_miou = evaluate(epoch, model, val_loader, device=device,
                                                          num_classes=num_classes)
 
         print(f"train_loss: {train_loss:.4f}\n"
+              # f"train_miou: {train_miou * 100:.2f}\n"
               f"val_loss: {val_loss:.4f}\n"
-              f"val dice: {val_dice * 100:.2f}\n"
-              f"val miou: {val_miou * 100:.2f}\n"
-              )
+              f"val_dice: {val_dice * 100:.2f}\n"
+              f"val_miou: {val_miou * 100:.2f}")
         val_info = str(confmat)
         # print(val_info)
         train_losses.append(train_loss)
         val_losses.append(val_loss)
         dices.append(val_dice)
         mious.append(val_miou)
+
+        # tags = ["train_loss", "train_miou", "val_loss", "val_miou", "learning_rate"]
+        # tb_writer.add_scalar(tags[0], train_loss, epoch)
+        # tb_writer.add_scalar(tags[1], train_miou, epoch)
+        # tb_writer.add_scalar(tags[2], val_loss, epoch)
+        # tb_writer.add_scalar(tags[3], val_miou, epoch)
+        # tb_writer.add_scalar(tags[4], optimizer.param_groups[0]["lr"], epoch)
+
         # write into txt
         with open(results_file, "a") as f:
             # 记录每个epoch对应的train_loss、lr以及验证集各指标
             train_info = f"[epoch: {epoch}]\n" \
+                         f"lr: {lr:.6f}\n" \
                          f"train_loss: {train_loss:.4f}\n" \
                          f"val_loss: {val_loss:.4f}\n" \
-                         f"lr: {lr:.6f}\n" \
-                         f"dice: {val_dice * 100:.2f}\n" \
-                         f"miou: {val_miou * 100:.2f}\n"
+                         f"val_dice: {val_dice * 100:.2f}\n" \
+                         f"val_miou: {val_miou * 100:.2f}\n"
             f.write(train_info + val_info + "\n\n")
         torch.save(model.state_dict(), get_latest_weight_path(args))
 
@@ -120,15 +134,15 @@ def train():
                 best_dice = val_dice
                 best_epoch = epoch
 
-            print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
-            save_file = {"model": model.state_dict(),
-                         "optimizer": optimizer.state_dict(),
-                         "lr_scheduler": lr_scheduler.state_dict(),
-                         "epoch": epoch,
-                         "args": args}
-            if args.amp:
-                save_file["scaler"] = scaler.state_dict()
-            torch.save(save_file, get_best_weight_path(args))
+                save_file = {"model": model.state_dict(),
+                             "optimizer": optimizer.state_dict(),
+                             "lr_scheduler": lr_scheduler.state_dict(),
+                             "epoch": epoch,
+                             "args": args}
+                if args.amp:
+                    save_file["scaler"] = scaler.state_dict()
+                torch.save(save_file, get_best_weight_path(args))
+        print(f"best epoch:{best_epoch} dice:{best_dice * 100:.2f} miou:{best_miou * 100:.2f}")
 
     with open(results_file, "a") as f:
         best_info = f"[epoch: {best_epoch}]\n" \
@@ -147,6 +161,8 @@ def train():
 
 
 if __name__ == '__main__':
-    if not os.path.exists("./save_weights"):
-        os.mkdir("./save_weights")
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+
+    os.makedirs("./save_weights", exist_ok=True)
+    os.makedirs("./log", exist_ok=True)
     train()

@@ -1,6 +1,6 @@
-import numpy as np
 import PIL.Image
 import cv2
+import numpy as np
 
 COLORS = [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
           (0, 0, 128), (128, 0, 128), (0, 128, 128), (128, 128, 128),
@@ -22,8 +22,6 @@ def pre_process(image_path, mask_path, image_size):
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
-    # image = cv2.bilateralFilter(image, 2, 50, 50)  # remove images noise.
-    # img = cv2.applyColorMap(img, cv2.COLORMAP_BONE)  # produce a pseudocolored image. 伪彩色
     image = np.array(image, np.float32)
     image = image / 127.5 - 1
 

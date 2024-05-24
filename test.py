@@ -6,28 +6,30 @@ import time
 import datetime
 import torch
 
+from torch.utils.data import DataLoader
+
 from utils.train_and_eval import evaluate
-from dataset import MyDataset
-from parse_args import parse_args, get_model
+from utils.dataset import MyDataset
+from parse_args import parse_args, get_model, get_device, get_best_weight_path
 
 
 def model_test():
     args = parse_args()
 
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    device = get_device()
     batch_size = args.batch_size
     num_classes = args.num_classes
 
-    val_dataset = MyDataset(args.data_path+"/test", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=batch_size,
-                                             num_workers=num_workers,
-                                             pin_memory=True)
+    val_loader = DataLoader(val_dataset,
+                            batch_size=batch_size,
+                            num_workers=num_workers,
+                            pin_memory=True)
     model = get_model(args)
-    weights_path = "save_weights/{}_best_model.pth".format(args.arch)
-    print(weights_path)
+    weights_path = get_best_weight_path(args)
+    # print(weights_path)
     model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
     start_time = time.time()
 

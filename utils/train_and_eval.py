@@ -4,30 +4,36 @@ import numpy as np
 import torch
 import tqdm
 from torch.nn.functional import cross_entropy
+
 import utils.distributed_utils as utils
-from utils.loss import dice_loss, build_target, iou_loss, FocalLoss
+from utils.loss import build_target
 
 
 def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoothing: float = 0.1):
     losses = {}
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
-    # loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
+    target = build_target(target, num_classes)
+    loss_weight = torch.as_tensor([1, 2, 1, 1, 1], device="cuda")
     for name, x in inputs.items():
-        target = build_target(target, num_classes)
-        a = 0.3
-        loss = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
-        + a * dice_loss(x, target, multiclass=True)
+        a = 0.
+        losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
+        # + a * dice_loss(x, target, multiclass=True)
         # Flooding
         # b = 0.28
         # loss = (loss - b).abs() + b
-        losses[name] = loss
-
-    return losses['out']
+        # losses[name] = loss
+    total_loss = losses['out']
+    if len(losses) > 1:
+        for k in losses.keys():
+            if k != 'out':
+                total_loss += 0.3 * losses[k]
+    return total_loss
 
 
 def evaluate(epoch_num, model, data_loader, device, num_classes):
     model.eval()
+
     confmat = utils.ConfusionMatrix(num_classes)
     dice = utils.DiceCoefficient(num_classes=num_classes)
     val_loss = []
@@ -44,7 +50,7 @@ def evaluate(epoch_num, model, data_loader, device, num_classes):
             confmat.update(target.flatten(), output.argmax(1).flatten())
             dice.update(output, target)
             val_loss.append(loss.item())
-            data_loader.desc = "[val epoch {}] loss: {:.4f}".format(epoch_num, np.mean(val_loss))
+            data_loader.desc = f"[val epoch {epoch_num}] loss: {np.mean(val_loss):.4f}"
         confmat.reduce_from_all_processes()
         dice.reduce_from_all_processes()
 
@@ -54,6 +60,9 @@ def evaluate(epoch_num, model, data_loader, device, num_classes):
 def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classes,
                     lr_scheduler, scaler=None):
     model.train()
+
+    # confmat = utils.ConfusionMatrix(num_classes)
+    # dice = utils.DiceCoefficient(num_classes=num_classes)
 
     train_loss = []
     data_loader = tqdm.tqdm(data_loader, file=sys.stdout)
@@ -72,11 +81,18 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
             loss.backward()
             optimizer.step()
         lr_scheduler.step()
-        lr = optimizer.param_groups[0]["lr"]
+
+        if isinstance(output, dict):
+            output = output['out']
+        # confmat.update(target.flatten(), output.argmax(1).flatten())
+        # dice.update(output, target)
         train_loss.append(loss.item())
-        data_loader.desc = "[train epoch {}] loss: {:.4f}".format(epoch_num, np.mean(train_loss))
+
+        data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} "
+    lr = optimizer.param_groups[0]["lr"]
     # lr_scheduler.step()
-    return np.mean(train_loss), lr
+    return np.mean(train_loss), 0, 0, lr
+    # return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr
 
 
 def create_lr_scheduler(optimizer,
@@ -100,6 +116,6 @@ def create_lr_scheduler(optimizer,
             return warmup_factor * (1 - alpha) + alpha
         else:
             # warmup后lr倍率因子从1 -> 0
-            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.9
+            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.85
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)
