@@ -3,8 +3,6 @@ import onnx
 import onnxruntime
 import torch
 
-from parse_args import parse_args, get_model, get_best_weight_path
-
 # is_convert_onnx = True
 is_convert_onnx = False
 
@@ -14,6 +12,8 @@ def to_numpy(tensor):
 
 
 def convert_onnx():
+    from parse_args import parse_args, get_model, get_best_weight_path
+
     args = parse_args()
     # create model
     model = get_model(args)

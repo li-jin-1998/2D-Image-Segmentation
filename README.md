@@ -2,6 +2,18 @@
 
 Personal code for segmentation.
 
+## Usage
+
+export environment
+```
+conda env export -n lj_py > myenv.yml
+```
+
+create environment
+```
+conda env create -f myenv.yml
+```
+
 ## Reference
 
 ### RGB
