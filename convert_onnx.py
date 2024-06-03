@@ -3,9 +3,6 @@ import onnx
 import onnxruntime
 import torch
 
-# is_convert_onnx = True
-is_convert_onnx = False
-
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
@@ -16,7 +13,7 @@ def convert_onnx():
 
     args = parse_args()
     # create model
-    model = get_model(args)
+    model = get_model(args, is_convert_onnx=True)
     weights_path = get_best_weight_path(args)
 
     device = torch.device("cpu")

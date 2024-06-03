@@ -14,6 +14,11 @@ create environment
 conda env create -f myenv.yml
 ```
 
+pip install
+```
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
+```
+
 ## Reference
 
 ### RGB

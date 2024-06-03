@@ -8,8 +8,6 @@ from torch import Tensor
 from torchvision import ops
 from torchvision.models import efficientnet
 
-from convert_onnx import is_convert_onnx
-
 
 class IntermediateLayerGetter(nn.ModuleDict):
     _version = 2
@@ -46,6 +44,8 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
 
 activation_layer = nn.ReLU(inplace=True)
+
+
 # activation_layer = nn.LeakyReLU(0.1, inplace=True)
 
 
@@ -57,7 +57,7 @@ class OutConv(nn.Sequential):
             nn.ConvTranspose2d(in_channels, middle_channels, 4, 2, 1, 0, bias=False),
             nn.BatchNorm2d(middle_channels),
             activation_layer,
-            nn.Conv2d(middle_channels, num_classes, kernel_size=3, stride=1, padding=1)
+            nn.Conv2d(middle_channels, num_classes, kernel_size=1, stride=1, padding=0)
         )
 
     def forward(self, x):
@@ -153,7 +153,8 @@ class DecoderBlock(nn.Module):
 
 
 class EfficientUNet(nn.Module):
-    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None, deep_supervision=False):
+    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None, deep_supervision=False,
+                 is_convert_onnx=False):
         super(EfficientUNet, self).__init__()
         if model_name == 'efficientnet_b0':
             backbone = efficientnet.efficientnet_b0(pretrained=pretrain_backbone)
@@ -198,6 +199,7 @@ class EfficientUNet(nn.Module):
         self.up4 = DecoderBlock(self.stage_out_channels[1] * 2, self.stage_out_channels[0], drop[3])
         self.outconv = OutConv(self.stage_out_channels[0] * 2, num_classes=num_classes)
 
+        self.is_convert_onnx = is_convert_onnx
         self.deep_supervision = deep_supervision
         if self.deep_supervision:
             self.auxiliary0 = nn.Conv2d(self.stage_out_channels[0] * 2, num_classes, kernel_size=1)
@@ -210,7 +212,7 @@ class EfficientUNet(nn.Module):
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        if is_convert_onnx:
+        if self.is_convert_onnx:
             print("convert onnx")
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
@@ -232,7 +234,7 @@ class EfficientUNet(nn.Module):
         d2 = self.up3(d3, e1)
         d1 = self.up4(d2, e0)
         out = self.outconv(d1)
-        if is_convert_onnx:
+        if self.is_convert_onnx:
             return out.permute(0, 2, 3, 1)
         if self.training and self.deep_supervision:
             # print(d1.shape, d2.shape, d3.shape, d4.shape)

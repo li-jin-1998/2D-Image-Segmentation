@@ -104,13 +104,13 @@ if __name__ == '__main__':
     from parse_args import parse_args
 
     args = parse_args()
-    # dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
-    # data = DataLoader(dataset, batch_size=1, shuffle=True)
-    # for i, j in data:
-    # print(i.shape, j.shape)
-    # print(j)
-    # print(np.min(i.numpy()), np.max(i.numpy()))
-    # print(np.min(j.numpy()), np.max(j.numpy()))
-    dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
+    dataset = MyDataset(args.data_path + "/augmentation_test", args.image_size)
+    data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
+    for i, j in data_loader:
+        print(i.shape, j.shape)
+        print(np.min(i.numpy()), np.max(i.numpy()))
+        print(np.min(j.numpy()), np.max(j.numpy()))
+        break
+    # dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
     data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
     plot_data_loader_image(data_loader)

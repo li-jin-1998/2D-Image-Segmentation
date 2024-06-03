@@ -24,6 +24,7 @@ def pre_process(image_path, mask_path, image_size):
     image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_CUBIC)
     image = np.array(image, np.float32)
     image = image / 127.5 - 1
+    # image = image / 255.0
 
     mask = cv2.imread(mask_path)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)

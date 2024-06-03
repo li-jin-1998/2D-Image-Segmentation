@@ -14,15 +14,13 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
     target = build_target(target, num_classes)
-    loss_weight = torch.as_tensor([1, 2, 1, 1, 1], device="cuda")
+    # loss_weight = torch.as_tensor([1, 2, 1, 1, 1], device="cuda")
     for name, x in inputs.items():
         a = 0.
         losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
         # + a * dice_loss(x, target, multiclass=True)
         # Flooding
-        # b = 0.28
         # loss = (loss - b).abs() + b
-        # losses[name] = loss
     total_loss = losses['out']
     if len(losses) > 1:
         for k in losses.keys():
@@ -82,8 +80,8 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
             optimizer.step()
         lr_scheduler.step()
 
-        if isinstance(output, dict):
-            output = output['out']
+        # if isinstance(output, dict):
+        #     output = output['out']
         # confmat.update(target.flatten(), output.argmax(1).flatten())
         # dice.update(output, target)
         train_loss.append(loss.item())
@@ -116,6 +114,6 @@ def create_lr_scheduler(optimizer,
             return warmup_factor * (1 - alpha) + alpha
         else:
             # warmup后lr倍率因子从1 -> 0
-            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.85
+            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.5
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)

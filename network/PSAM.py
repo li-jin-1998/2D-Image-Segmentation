@@ -2,7 +2,6 @@ from functools import partial
 
 import torch
 import torch.nn as nn
-import math
 import torch.nn.functional as F
 
 nonlinearity = partial(F.relu, inplace=True)
@@ -121,7 +120,7 @@ class PSAModule(nn.Module):
         # self.conv_4 = conv(inplanes, planes // 4, kernel_size=conv_kernels[3], padding=conv_kernels[3] // 2,
         #                    stride=stride, groups=conv_groups[3])
         # self.se = SEWeightModule(planes // 4)
-        self.se = channel_attention(planes // 4)
+        self.se = channel_attention(planes // 4, ratio=4)
         self.split_channel = planes // 4
         self.softmax = nn.Softmax(dim=1)
 

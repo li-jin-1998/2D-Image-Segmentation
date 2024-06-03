@@ -34,7 +34,7 @@ efficientnet_dict = ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2',
                      'efficientnet_b6', 'efficientnet_b7', 'efficientnet_v2_s']
 
 
-def get_model(args):
+def get_model(args, is_convert_onnx=False):
     print('**************************')
     print(f'model:{args.arch}\n'
           f'epoch:{args.epochs}\n'
@@ -48,7 +48,8 @@ def get_model(args):
         model = MobileV3UNet(num_classes=args.num_classes, pretrain_backbone=True).to(device)
     elif args.arch == 'efficientnet' or args.arch in efficientnet_dict:
         model = EfficientUNet(num_classes=args.num_classes, pretrain_backbone=True,
-                              model_name=args.arch, deep_supervision=args.deep_supervision).to(device)
+                              model_name=args.arch, deep_supervision=args.deep_supervision,
+                              is_convert_onnx=is_convert_onnx).to(device)
     # if args.arch == 'efficientnet2':
     #     from efficientunet import get_efficientunet_b1
     #     model = get_efficientunet_b1(out_channels=args.num_classes, concat_input=True, pretrained=True).to(device)
@@ -75,10 +76,10 @@ def parse_args():
     parser.add_argument("--epochs", default=300, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
-    parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
-    parser.add_argument('--resume', default=0, help='resume from checkpoint')
+    parser.add_argument('--lr', default=5e-4, type=float, help='initial learning rate')
+    parser.add_argument('--resume', default=0, type=int, help='resume from checkpoint')
     parser.add_argument('--deep_supervision', default=0, help='deep supervision training')
-    parser.add_argument('--multi_scale', default=False, help='multi-scale training')
+    parser.add_argument('--multi_scale', default=0, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',
                         help='start epoch')
     parser.add_argument('--save_best', default=True, type=bool, help='only save best metric weights')
