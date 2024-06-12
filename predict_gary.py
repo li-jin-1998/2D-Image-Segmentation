@@ -49,8 +49,11 @@ def predict_gray():
     with torch.no_grad():
         for image_path in tqdm.tqdm(predict_image_names, file=sys.stdout):
             # load image
-            depth_path = image_path.replace('image', 'depth')
-            # depth_path = None
+            # args.with_depth = False
+            if args.with_depth:
+                depth_path = image_path.replace('image', 'depth')
+            else:
+                depth_path = None
             # depth is None
             # image, depth, mask = pre_process(image_path, None, None, args.image_size)
             image, depth, mask = pre_process(image_path, depth_path, None, args.image_size)
@@ -71,12 +74,16 @@ def predict_gray():
 
             prediction = prediction.to("cpu").numpy().astype(np.uint8)
             predict_result = mask_postprocessing(prediction, original_img.shape[1], original_img.shape[0])
-            if depth_path is None:
-                dst = os.path.join(result_path, os.path.splitext(os.path.basename(image_path))[0] + "_predict2.png")
+            if args.with_depth:
+                dst = os.path.join(result_path,
+                                   os.path.splitext(os.path.basename(image_path))[0] + "_predict_depth.png")
             else:
                 dst = os.path.join(result_path, os.path.splitext(os.path.basename(image_path))[0] + "_predict.png")
+
+            dst_image_path = os.path.join(result_path, os.path.splitext(os.path.basename(image_path))[0] + "_image.png")
+            if not os.path.exists(dst_image_path):
+                shutil.copy(str(image_path), dst_image_path)
             cv2.imwrite(dst, predict_result)
-            # shutil.copy(str(image_path), dst.replace('predict', ' image'))
 
     total_time = time.time() - start_time
     print("time {}s, fps {}".format(total_time, len(predict_image_names) / total_time))

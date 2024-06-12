@@ -17,8 +17,8 @@ from parse_args import parse_args, get_model, get_best_weight_path, get_latest_w
 def train():
     args = parse_args()
 
-    print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:2000/')
-    tb_writer = SummaryWriter()
+    # print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:2000/')
+    # tb_writer = SummaryWriter()
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     batch_size = args.batch_size
@@ -27,8 +27,8 @@ def train():
     # 用来保存训练以及验证过程中信息
     results_file = "log/{}_{}.txt".format(args.arch, datetime.datetime.now().strftime("%Y%m%d-%H%M"))
 
-    train_dataset = MyDataset(args.data_path + "/data", args.image_size)
-    val_dataset = MyDataset(args.data_path + "/test", args.image_size)
+    train_dataset = MyDataset(args.data_path + "/test", args.image_size)
+    val_dataset = MyDataset(args.data_path + "/data", args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -55,7 +55,7 @@ def train():
     # summary(model, (3, args.image_size, args.image_size))
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-2)
     # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
@@ -110,12 +110,12 @@ def train():
         dices.append(val_dice)
         mious.append(val_miou)
 
-        tags = ["train_loss", "train_miou", "val_loss", "val_miou", "learning_rate"]
-        tb_writer.add_scalar(tags[0], train_loss, epoch)
-        tb_writer.add_scalar(tags[1], train_miou, epoch)
-        tb_writer.add_scalar(tags[2], val_loss, epoch)
-        tb_writer.add_scalar(tags[3], val_miou, epoch)
-        tb_writer.add_scalar(tags[4], optimizer.param_groups[0]["lr"], epoch)
+        # tags = ["train_loss", "train_miou", "val_loss", "val_miou", "learning_rate"]
+        # tb_writer.add_scalar(tags[0], train_loss, epoch)
+        # tb_writer.add_scalar(tags[1], train_miou, epoch)
+        # tb_writer.add_scalar(tags[2], val_loss, epoch)
+        # tb_writer.add_scalar(tags[3], val_miou, epoch)
+        # tb_writer.add_scalar(tags[4], optimizer.param_groups[0]["lr"], epoch)
 
         # write into txt
         with open(results_file, "a") as f:

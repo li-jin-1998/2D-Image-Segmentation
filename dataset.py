@@ -15,9 +15,9 @@ class MyDataset(Dataset):
     def __init__(self, path, image_size):
         self.path = path
         self.image_size = image_size
-        self.image_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'image' in p]
-        self.mask_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'mask' in p]
-        self.depth_paths = [os.path.join(self.path, p) for p in os.listdir(path) if 'depth' in p]
+        self.image_paths = sorted([os.path.join(self.path, p) for p in os.listdir(path) if 'image' in p])
+        self.mask_paths = sorted([os.path.join(self.path, p) for p in os.listdir(path) if 'mask' in p])
+        self.depth_paths = sorted([os.path.join(self.path, p) for p in os.listdir(path) if 'depth' in p])
         assert len(self.image_paths) == len(self.mask_paths) == len(self.depth_paths)
 
     def __getitem__(self, index):

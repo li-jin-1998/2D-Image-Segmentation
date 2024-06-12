@@ -56,8 +56,8 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
                     lr_scheduler, scaler=None):
     model.train()
 
-    confmat = utils.ConfusionMatrix(num_classes)
-    dice = utils.DiceCoefficient(num_classes=num_classes)
+    # confmat = utils.ConfusionMatrix(num_classes)
+    # dice = utils.DiceCoefficient(num_classes=num_classes)
 
     train_loss = []
     data_loader = tqdm.tqdm(data_loader, file=sys.stdout)
@@ -80,14 +80,15 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
 
         if isinstance(output, dict):
             output = output['out']
-        confmat.update(target.flatten(), output.argmax(1).flatten())
-        dice.update(output, target)
+        # confmat.update(target.flatten(), output.argmax(1).flatten())
+        # dice.update(output, target)
         train_loss.append(loss.item())
 
         data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} "
     lr = optimizer.param_groups[0]["lr"]
     # lr_scheduler.step()
-    return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr
+    return np.mean(train_loss), 0, 0, lr
+    # return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr
 
 
 def create_lr_scheduler(optimizer,
@@ -111,6 +112,6 @@ def create_lr_scheduler(optimizer,
             return warmup_factor * (1 - alpha) + alpha
         else:
             # warmup后lr倍率因子从1 -> 0
-            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.9
+            return (1 - (x - warmup_epochs * num_step) / ((epochs - warmup_epochs) * num_step)) ** 0.5
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)

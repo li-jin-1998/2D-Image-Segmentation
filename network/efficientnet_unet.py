@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from functools import partial
 from typing import Dict
+
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -83,9 +83,12 @@ class DownConv(nn.Module):
         if mid_channels is None:
             mid_channels = out_channels
         super(DownConv, self).__init__()
-        mid_channels = in_channels // 2
+        mid_channels = in_channels * 2
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(mid_channels),
+            activation_layer,
+            nn.Conv2d(mid_channels, mid_channels, kernel_size=1, padding=0, bias=False),
             nn.BatchNorm2d(mid_channels),
             activation_layer,
             nn.Conv2d(mid_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
@@ -110,7 +113,7 @@ class UpConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(UpConv, self).__init__()
         self.conv = nn.Sequential(
-            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1, bias=False),
+            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2, padding=0, output_padding=0, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -148,24 +151,28 @@ class DecoderBlock(nn.Module):
 
         middle_channels = int(in_channels * 2)
 
-        self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
-        self.deconv2 = UpConv(middle_channels, middle_channels)
-        self.conv3 = Conv(middle_channels, out_channels, kernel_size=3)
+        self.up = UpConv(in_channels, middle_channels)
 
-        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
+        self.conv1 = Conv(middle_channels, middle_channels, kernel_size=3)
+        self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
+
+        self.conv3 = Conv(out_channels * 2, out_channels * 2, kernel_size=1)
+        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
 
     def forward(self, x, y):
+        x = self.up(x)
+
         x = self.conv1(x)
-        x = self.deconv2(x)
-        x = self.conv3(x)
+        x = self.conv2(x)
 
         x = torch.cat([y, x], dim=1)
+        x = self.conv3(x)
         x = self.drop(x)
         return x
 
 
 class EfficientUNet(nn.Module):
-    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None):
+    def __init__(self, num_classes, pretrain_backbone: bool = True, model_name: str = None, with_depth: bool = False):
         super(EfficientUNet, self).__init__()
         if model_name == 'efficientnet_b0':
             backbone = efficientnet.efficientnet_b0(pretrained=pretrain_backbone)
@@ -190,40 +197,49 @@ class EfficientUNet(nn.Module):
         self.up4 = DecoderBlock(self.stage_out_channels[1] * 2, self.stage_out_channels[0], drop[3])
         self.outconv = OutConv(self.stage_out_channels[0] * 2, num_classes=num_classes)
 
-        from network.PSAM import PPM, PSAModule, PSAModule_initial
+        from network.PSAM import PSAModule
         self.PPM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
-
-        self.conv = nn.Conv2d(1, self.stage_out_channels[0], kernel_size=7, stride=2, padding=3, bias=False)
-        self.bn1 = nn.BatchNorm2d(self.stage_out_channels[0])
-        self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
-        self.encoder1 = DownConv(self.stage_out_channels[0], self.stage_out_channels[1])
-        self.encoder2 = DownConv(self.stage_out_channels[1], self.stage_out_channels[2])
-        self.encoder3 = DownConv(self.stage_out_channels[2], self.stage_out_channels[3])
-        self.encoder4 = DownConv(self.stage_out_channels[3], self.stage_out_channels[4])
+        self.with_depth = with_depth
+        if self.with_depth:
+            self.conv = nn.Conv2d(1, self.stage_out_channels[0], kernel_size=7, stride=2, padding=3, bias=False)
+            self.bn = nn.BatchNorm2d(self.stage_out_channels[0])
+            self.relu = nn.ReLU(inplace=True)
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+            self.encoder1 = DownConv(self.stage_out_channels[0], self.stage_out_channels[1])
+            self.encoder2 = DownConv(self.stage_out_channels[1], self.stage_out_channels[2])
+            self.encoder3 = DownConv(self.stage_out_channels[2], self.stage_out_channels[3])
+            self.encoder4 = DownConv(self.stage_out_channels[3], self.stage_out_channels[4])
 
     def forward(self, x: torch.Tensor, depth) -> Dict[str, torch.Tensor]:
         if is_convert_onnx:
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
-        depth0 = self.conv(depth)
-        depth0 = self.bn1(depth0)
-        depth0 = self.relu(depth0)
-        depth0 = self.maxpool(depth0)
-        depth1 = self.encoder1(depth0)
-        depth2 = self.encoder2(depth1)
-        depth3 = self.encoder3(depth2)
-        depth4 = self.encoder4(depth3)
-        # print(d0.shape)
-        # for i in range(8):
-        #     print(i,backbone_out['stage{}'.format(str(i))].shape)
-        # encoder
-        e0 = backbone_out['stage0'] + depth0
-        e1 = backbone_out['stage1'] + depth1
-        e2 = backbone_out['stage2'] + depth2
-        e3 = backbone_out['stage3'] + depth3
-        e4 = backbone_out['stage4']
+
+        if self.with_depth:
+            depth0 = self.conv(depth)
+            depth0 = self.bn(depth0)
+            depth0 = self.relu(depth0)
+            depth0 = self.maxpool(depth0)
+            depth1 = self.encoder1(depth0)
+            depth2 = self.encoder2(depth1)
+            depth3 = self.encoder3(depth2)
+            depth4 = self.encoder4(depth3)
+            # print(d0.shape)
+            # for i in range(8):
+            #     print(i,backbone_out['stage{}'.format(str(i))].shape)
+            # encoder
+            e0 = backbone_out['stage0'] + depth0
+            e1 = backbone_out['stage1'] + depth1
+            e2 = backbone_out['stage2'] + depth2
+            e3 = backbone_out['stage3'] + depth3
+            e4 = backbone_out['stage4']  # + depth4
+        else:
+            e0 = backbone_out['stage0']
+            e1 = backbone_out['stage1']
+            e2 = backbone_out['stage2']
+            e3 = backbone_out['stage3']
+            e4 = backbone_out['stage4']
 
         # center
         e4 = self.PPM(e4)
@@ -243,5 +259,5 @@ if __name__ == '__main__':
     from torchsummary import summary
 
     model = EfficientUNet(num_classes=3, pretrain_backbone=True,
-                          model_name='efficientnet_b1').to("cuda")
-    summary(model, [(3, 192, 192), (1, 192, 192)])
+                          model_name='efficientnet_b1', with_depth=True).to("cuda")
+    summary(model, [(3, 192, 192), (1, 192, 192)])  # 16,903,683   16,604,147
