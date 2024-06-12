@@ -77,57 +77,17 @@ class Conv(nn.Module):
         return self.conv(x)
 
 
-class DeformConv(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(DeformConv, self).__init__()
-        from network.deform_conv import DeformConv2d
-        self.conv = nn.Sequential(
-            DeformConv2d(in_ch, out_ch, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(out_ch),
-            nn.LeakyReLU(0.1, inplace=True)
-        )
-
-    def forward(self, x):
-        return self.conv(x)
-
-
 class UpConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(UpConv, self).__init__()
         self.conv = nn.Sequential(
-            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1, bias=False),
+            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2, padding=0, output_padding=0, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
 
     def forward(self, x):
         return self.conv(x)
-
-
-class DepthwiseSeparableConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1):
-        super(DepthwiseSeparableConv, self).__init__()
-
-        # 深度卷积层
-        self.depthwise = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels, kernel_size,
-                      stride=stride, padding=(kernel_size - 1) // 2,
-                      groups=in_channels,
-                      bias=False),
-            nn.BatchNorm2d(in_channels),
-            activation_layer
-        )
-        # 逐点卷积层
-        self.pointwise = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, stride, bias=False),
-            nn.BatchNorm2d(out_channels),
-            activation_layer
-        )
-
-    def forward(self, x):
-        x = self.depthwise(x)
-        x = self.pointwise(x)
-        return x
 
 
 class DecoderBlock(nn.Module):
@@ -136,18 +96,22 @@ class DecoderBlock(nn.Module):
 
         middle_channels = int(in_channels * 2)
 
-        self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
-        self.deconv2 = UpConv(middle_channels, middle_channels)
-        self.conv3 = Conv(middle_channels, out_channels, kernel_size=3)
+        self.up = UpConv(in_channels, middle_channels)
 
-        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
+        self.conv1 = Conv(middle_channels, middle_channels, kernel_size=3)
+        self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
+
+        self.conv3 = Conv(out_channels * 2, out_channels * 2, kernel_size=1)
+        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
 
     def forward(self, x, y):
+        x = self.up(x)
+
         x = self.conv1(x)
-        x = self.deconv2(x)
-        x = self.conv3(x)
+        x = self.conv2(x)
 
         x = torch.cat([y, x], dim=1)
+        x = self.conv3(x)
         x = self.drop(x)
         return x
 
@@ -165,21 +129,6 @@ class EfficientUNet(nn.Module):
         elif model_name == 'efficientnet_b2':
             backbone = efficientnet.efficientnet_b2(pretrained=pretrain_backbone)
             self.stage_out_channels = [16, 24, 48, 120, 352]
-        elif model_name == 'efficientnet_b3':
-            backbone = efficientnet.efficientnet_b3(pretrained=pretrain_backbone)
-            self.stage_out_channels = [24, 32, 48, 136, 384]
-        elif model_name == 'efficientnet_b4':
-            backbone = efficientnet.efficientnet_b4(pretrained=pretrain_backbone)
-            self.stage_out_channels = [24, 32, 56, 160, 448]
-        elif model_name == 'efficientnet_b5':
-            backbone = efficientnet.efficientnet_b5(pretrained=pretrain_backbone)
-            self.stage_out_channels = [24, 40, 64, 176, 512]
-        elif model_name == 'efficientnet_b6':
-            backbone = efficientnet.efficientnet_b6(pretrained=pretrain_backbone)
-            self.stage_out_channels = [32, 40, 72, 200, 576]
-        elif model_name == 'efficientnet_b7':
-            backbone = efficientnet.efficientnet_b7(pretrained=pretrain_backbone)
-            self.stage_out_channels = [32, 48, 80, 224, 640]
         elif model_name == 'efficientnet_v2_s':
             backbone = efficientnet.efficientnet_v2_s(pretrained=pretrain_backbone)
             self.stage_out_channels = [24, 48, 64, 160, 1280]

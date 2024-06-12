@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch_size", default=64, type=int)
-    parser.add_argument("--epochs", default=300, type=int, metavar="N",
+    parser.add_argument("--epochs", default=100, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=5e-4, type=float, help='initial learning rate')
