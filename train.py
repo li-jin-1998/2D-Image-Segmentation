@@ -95,6 +95,8 @@ def train():
         train_loss, train_dice, train_miou, lr = train_one_epoch(epoch, model, optimizer, train_loader, device,
                                                                  num_classes,
                                                                  lr_scheduler=lr_scheduler, scaler=scaler)
+        if epoch < 50:
+            continue
         confmat, val_dice, val_loss, val_miou = evaluate(epoch, model, val_loader, device=device,
                                                          num_classes=num_classes)
 

@@ -80,15 +80,11 @@ class Conv(nn.Module):
 
 class DownConv(nn.Module):
     def __init__(self, in_channels, out_channels, mid_channels=None):
-        if mid_channels is None:
-            mid_channels = out_channels
         super(DownConv, self).__init__()
-        mid_channels = in_channels * 2
+        if mid_channels is None:
+            mid_channels = in_channels * 2
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(mid_channels),
-            activation_layer,
-            nn.Conv2d(mid_channels, mid_channels, kernel_size=1, padding=0, bias=False),
             nn.BatchNorm2d(mid_channels),
             activation_layer,
             nn.Conv2d(mid_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
@@ -156,7 +152,6 @@ class DecoderBlock(nn.Module):
         self.conv1 = Conv(middle_channels, middle_channels, kernel_size=3)
         self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
 
-        self.conv3 = Conv(out_channels * 2, out_channels * 2, kernel_size=1)
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
 
     def forward(self, x, y):
@@ -166,7 +161,6 @@ class DecoderBlock(nn.Module):
         x = self.conv2(x)
 
         x = torch.cat([y, x], dim=1)
-        x = self.conv3(x)
         x = self.drop(x)
         return x
 
