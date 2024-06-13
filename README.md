@@ -35,6 +35,8 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 
 - **[UDTransNet](https://github.com/McGregorWwww/UDTransNet)**
 
+- **[DIS](https://github.com/xuebinqin/DIS)**
+
 ### RGB-D
 
 - **[RedNet](https://github.com/JindongJiang/RedNet)**

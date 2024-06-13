@@ -101,8 +101,7 @@ class DecoderBlock(nn.Module):
         self.conv1 = Conv(middle_channels, middle_channels, kernel_size=3)
         self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
 
-        self.conv3 = Conv(out_channels * 2, out_channels * 2, kernel_size=1)
-        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
+        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
 
     def forward(self, x, y):
         x = self.up(x)
@@ -111,7 +110,6 @@ class DecoderBlock(nn.Module):
         x = self.conv2(x)
 
         x = torch.cat([y, x], dim=1)
-        x = self.conv3(x)
         x = self.drop(x)
         return x
 

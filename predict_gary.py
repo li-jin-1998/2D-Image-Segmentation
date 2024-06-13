@@ -75,7 +75,7 @@ def predict_gray():
             if 'IMAGE' in img_path:
                 origin_mask = str(img_path).replace('image/', 'mask/').replace("IMAGE", "MASK")
                 if os.path.exists(origin_mask):
-                    shutil.copy(origin_mask, dst.replace('predict', ' mask'))
+                    shutil.copy(origin_mask, dst.replace('predict', 'mask'))
     total_time = time.time() - start_time
     print("time {}s, fps {}".format(total_time, len(predict_image_names) / total_time))
 

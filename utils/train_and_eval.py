@@ -3,10 +3,15 @@ import sys
 import numpy as np
 import torch
 import tqdm
-from torch.nn.functional import cross_entropy
+from torch.nn import KLDivLoss, MSELoss, L1Loss, CrossEntropyLoss
 
 import utils.distributed_utils as utils
 from utils.loss import build_target
+
+mse_loss = MSELoss(size_average=True)
+kl_loss = KLDivLoss(size_average=True)
+l1_loss = L1Loss(size_average=True)
+ce_loss = CrossEntropyLoss(size_average=True)
 
 
 def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoothing: float = 0.1):
@@ -17,7 +22,9 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
     # loss_weight = torch.as_tensor([1, 2, 1, 1, 1], device="cuda")
     for name, x in inputs.items():
         a = 0.
-        losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
+        losses[name] = ce_loss(x, target)
+        # losses[name] = cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
+        # losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
         # + a * dice_loss(x, target, multiclass=True)
         # Flooding
         # loss = (loss - b).abs() + b
