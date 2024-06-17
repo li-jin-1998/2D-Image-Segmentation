@@ -81,7 +81,8 @@ class UpConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(UpConv, self).__init__()
         self.conv = nn.Sequential(
-            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2, padding=0, output_padding=0, bias=False),
+            nn.ConvTranspose2d(in_ch, out_ch, kernel_size=3, stride=2, padding=1, output_padding=1, bias=False),
+            # nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2, padding=0, output_padding=0, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -96,17 +97,15 @@ class DecoderBlock(nn.Module):
 
         middle_channels = int(in_channels * 2)
 
-        self.up = UpConv(in_channels, middle_channels)
-
-        self.conv1 = Conv(middle_channels, middle_channels, kernel_size=3)
+        self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
+        self.up = UpConv(middle_channels, middle_channels)
         self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
 
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
 
     def forward(self, x, y):
-        x = self.up(x)
-
         x = self.conv1(x)
+        x = self.up(x)
         x = self.conv2(x)
 
         x = torch.cat([y, x], dim=1)

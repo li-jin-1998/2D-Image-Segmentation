@@ -11,10 +11,10 @@ from utils.loss import build_target
 mse_loss = MSELoss(size_average=True)
 kl_loss = KLDivLoss(size_average=True)
 l1_loss = L1Loss(size_average=True)
-ce_loss = CrossEntropyLoss(size_average=True)
+ce_loss = CrossEntropyLoss(size_average=True, label_smoothing=0.1)
 
 
-def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoothing: float = 0.1):
+def criterion(inputs, target, num_classes: int = 3):
     losses = {}
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
@@ -23,8 +23,8 @@ def criterion(inputs, target, loss_weight=None, num_classes: int = 3, label_smoo
     for name, x in inputs.items():
         a = 0.
         losses[name] = ce_loss(x, target)
-        # losses[name] = cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
-        # losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=label_smoothing)
+        # losses[name] = cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
+        # losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
         # + a * dice_loss(x, target, multiclass=True)
         # Flooding
         # loss = (loss - b).abs() + b

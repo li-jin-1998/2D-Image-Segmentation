@@ -32,10 +32,10 @@ def predict_gray():
     model.to(device)
 
     # torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
-
-    predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
-    # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::4]
-    # predict_image_names = glob.glob("/mnt/algo_storage_server/UNet/Dataset/image/*.*")[::20]
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_bug/*Image*")
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_test/*")[::5]
+    predict_image_names = glob.glob(r"/home/lj/PycharmProjects/Data/checked/*].png")
+    # predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
     predict_image_names.sort()
     result_path = './visualization'
     if os.path.exists(result_path):

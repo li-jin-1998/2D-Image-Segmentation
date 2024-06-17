@@ -67,13 +67,13 @@ def parse_args():
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
                         help='unet/mobilenet/efficientnet/efficientnet_v2_s/UDTransNet')
     # parser.add_argument("--data_path", default="/mnt/algo-storage-server/UNet/Dataset14/data", help="root")
-    parser.add_argument("--data_path", default="/home/lj/PycharmProjects/2D-image-Segmentation/dataset/data",
+    parser.add_argument("--data_path", default="/home/lj/PycharmProjects/2D-Image-Segmentation/dataset/data",
                         help="root")
     parser.add_argument("--num_classes", default=5, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch_size", default=64, type=int)
-    parser.add_argument("--epochs", default=100, type=int, metavar="N",
+    parser.add_argument("--epochs", default=200, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
     parser.add_argument('--lr', default=5e-4, type=float, help='initial learning rate')
