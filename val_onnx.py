@@ -18,7 +18,10 @@ session = onnxruntime.InferenceSession(onnx_file_name)
 start_time = time.time()
 # paths = glob.glob(args.data_path+"/test/image/*.*")[0:-1]
 # paths = glob.glob("/mnt/algo_storage_server/UNet/Dataset/implant2/*.*")[::3]
-paths = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
+# paths = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
+paths = glob.glob(
+    "/mnt/algo-storage-server/Workspaces/fangqi/AS connect内部下载数据/种植杆数据/scan转化ok/240612880005424699264/*")[
+                      ::]
 
 result_path = './onnx'
 # result_path = '/mnt/algo_storage_server/UNet/Dataset/data/onnx—predict/'
@@ -33,6 +36,9 @@ for path in tqdm.tqdm(paths):
     #     continue
     # Compute ONNX model output
     origin_image = cv2.imread(path)
+    if origin_image is None:
+        print("{} is None".format(path))
+        continue
     image = cv2.cvtColor(origin_image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (args.image_size, args.image_size), interpolation=cv2.INTER_CUBIC)
     image = np.array(image, np.float32)

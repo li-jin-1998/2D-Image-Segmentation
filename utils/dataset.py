@@ -87,7 +87,7 @@ def plot_data_loader_image(data_loader):
             plot_masks.append(target[i])
             plot_images.append(img)
 
-        fig, axes = plt.subplots(plot_num // 2, 4, figsize=(10, 10))
+        fig, axes = plt.subplots(plot_num // 4, 8, figsize=(10, 10))
         axes = axes.flatten()
         j = 0
         for img, lab in zip(plot_images, plot_masks):
@@ -112,5 +112,5 @@ if __name__ == '__main__':
         print(np.min(j.numpy()), np.max(j.numpy()))
         break
     # dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
-    data_loader = DataLoader(dataset, batch_size=8, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=16, shuffle=True)
     plot_data_loader_image(data_loader)

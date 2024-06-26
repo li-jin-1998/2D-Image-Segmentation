@@ -85,7 +85,7 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
         else:
             loss.backward()
             optimizer.step()
-        lr_scheduler.step()
+        # lr_scheduler.step()
 
         # if isinstance(output, dict):
         #     output = output['out']
@@ -94,8 +94,8 @@ def train_one_epoch(epoch_num, model, optimizer, data_loader, device, num_classe
         train_loss.append(loss.item())
 
         data_loader.desc = f"[train epoch {epoch_num}] loss: {np.mean(train_loss):.4f} "
+    lr_scheduler.step()
     lr = optimizer.param_groups[0]["lr"]
-    # lr_scheduler.step()
     return np.mean(train_loss), 0, 0, lr
     # return np.mean(train_loss), dice.value.item(), confmat.get_miou(), lr
 

@@ -32,9 +32,12 @@ def predict_gray():
     model.to(device)
 
     # torch.save(model.state_dict(), "save_weights/{}_predict_model.pth".format(args.arch))
-    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_bug/*Image*")
-    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_test/*")[::5]
-    predict_image_names = glob.glob(r"/home/lj/PycharmProjects/Data/checked/*].png")
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/01_待标注/00_种植/bug补充数据/20240620/*/*Image*.png")[::2]
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/01_待标注/00_种植/bug补充数据/20240624/*/*origin.png")[::]
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/AS connect内部下载数据/种植杆数据/scan转化ok/240612880005424699264/*")[::2]
+    predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_test/*")[::5]
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/images/*")[::5]
+    # predict_image_names = glob.glob(r"/home/lj/PycharmProjects/Data/checked/*].png")
     # predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
     predict_image_names.sort()
     result_path = './visualization'
@@ -46,14 +49,17 @@ def predict_gray():
     model.eval()  # 进入验证模式
     with torch.no_grad():
         for img_path in tqdm.tqdm(predict_image_names):
-            # if 'ORIGIN' not in img_path:
+            # if '004' not in img_path:
             #     continue
             # load image
             original_img = cv2.imread(img_path)
+            if original_img is None:
+                print("load image error:", img_path)
+                continue
             original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
 
             image = cv2.resize(original_img, (args.image_size, args.image_size),
-                                       interpolation=cv2.INTER_LINEAR)
+                               interpolation=cv2.INTER_LINEAR)
             image = image / 127.5 - 1
             image = torch.Tensor(image)
             image = image.permute(2, 0, 1)

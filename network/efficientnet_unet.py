@@ -65,10 +65,11 @@ class OutConv(nn.Sequential):
 
 
 class Conv(nn.Module):
-    def __init__(self, in_ch, out_ch, kernel_size=3):
+    def __init__(self, in_ch, out_ch, kernel_size=3, dilation=1):
         super(Conv, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=1, padding=(kernel_size - 1) // 2, bias=False),
+            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=1,
+                      padding=((kernel_size + 2 * (dilation - 1)) - 1) // 2, dilation=dilation, bias=False),
             nn.BatchNorm2d(out_ch),
             activation_layer
         )
@@ -97,9 +98,9 @@ class DecoderBlock(nn.Module):
 
         middle_channels = int(in_channels * 2)
 
-        self.conv1 = Conv(in_channels, middle_channels, kernel_size=3)
+        self.conv1 = Conv(in_channels, middle_channels, kernel_size=3, dilation=1)
         self.up = UpConv(middle_channels, middle_channels)
-        self.conv2 = Conv(middle_channels, out_channels, kernel_size=3)
+        self.conv2 = Conv(middle_channels, out_channels, kernel_size=3, dilation=1)
 
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
 
@@ -111,6 +112,30 @@ class DecoderBlock(nn.Module):
         x = torch.cat([y, x], dim=1)
         x = self.drop(x)
         return x
+
+
+class DecoderBlock2(nn.Module):
+    def __init__(self, in_channels, out_channels, p):
+        super(DecoderBlock2, self).__init__()
+
+        middle_channels = int(out_channels*4)
+
+        self.up = UpConv(in_channels, out_channels)
+
+        self.conv1 = Conv(out_channels * 2, middle_channels, kernel_size=3, dilation=1)
+        self.conv2 = Conv(middle_channels, out_channels*2, kernel_size=3, dilation=1)
+
+        self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
+
+    def forward(self, x, y):
+        x = self.up(x)
+        x1 = torch.cat([y, x], dim=1)
+
+        x1 = self.conv1(x1)
+        x1 = self.conv2(x1)
+
+        out = self.drop(x1)
+        return out
 
 
 class EfficientUNet(nn.Module):
@@ -138,7 +163,7 @@ class EfficientUNet(nn.Module):
         return_layers = dict([(str(j), f"stage{i}") for i, j in enumerate(stage_indices)])
         self.backbone = IntermediateLayerGetter(backbone.features, return_layers=return_layers)
         drop = [0.2, 0.2, 0.2, 0.2]
-        print(drop)
+        print(f"drop : {drop}, convert onnx : {is_convert_onnx}")
         self.up1 = DecoderBlock(self.stage_out_channels[4], self.stage_out_channels[3], drop[0])
         self.up2 = DecoderBlock(self.stage_out_channels[3] * 2, self.stage_out_channels[2], drop[1])
         self.up3 = DecoderBlock(self.stage_out_channels[2] * 2, self.stage_out_channels[1], drop[2])
@@ -153,13 +178,13 @@ class EfficientUNet(nn.Module):
             self.auxiliary2 = nn.Conv2d(self.stage_out_channels[2] * 2, num_classes, kernel_size=1)
             self.auxiliary3 = nn.Conv2d(self.stage_out_channels[3] * 2, num_classes, kernel_size=1)
 
-        from network.PSAM import PSAModule
-        self.PPM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
+        from network.PSAM import PSAModule, PPM
+        self.PSAM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         if self.is_convert_onnx:
-            print("convert onnx")
+
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
         # for i in range(5):
@@ -172,7 +197,8 @@ class EfficientUNet(nn.Module):
         e4 = backbone_out['stage4']
 
         # center
-        e4 = self.PPM(e4)
+        e4 = self.PSAM(e4)
+        # e4 = self.PPM(e4)
 
         # decoder
         d4 = self.up1(e4, e3)

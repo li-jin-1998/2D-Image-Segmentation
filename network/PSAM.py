@@ -218,23 +218,23 @@ class PPM(nn.Module):
             ))
         self.features = nn.ModuleList(self.features)
 
-        # self.conv = nn.Conv2d(in_channels=in_dim * 2, out_channels=in_dim, kernel_size=3, stride=1, padding=1)
-        # self.relu = nn.LeakyReLU(0.1, inplace=True)
-        # self.BN = nn.BatchNorm2d(in_dim)
+        self.conv = nn.Conv2d(in_channels=in_dim * 2, out_channels=in_dim, kernel_size=1, stride=1, padding=0)
+        self.relu = nn.ReLU(inplace=True)
+        self.BN = nn.BatchNorm2d(in_dim)
 
     def forward(self, x):
         x_size = x.size()
         # x1 = self.conv(x)
         # x1 = self.BN(x1)
         # x1 = self.relu(x1)
-        out = []
+        out = [x]
         for f in self.features:
             out.append(F.interpolate(f(x), x_size[2:], mode='bilinear', align_corners=True))
         # print(torch.cat(out, 1).shape)
         outputs = torch.cat(out, 1)
-        # outputs = self.conv(outputs)
-        # outputs = self.BN(outputs)
-        # outputs = self.relu(outputs)
+        outputs = self.conv(outputs)
+        outputs = self.BN(outputs)
+        outputs = self.relu(outputs)
         return outputs
 
 

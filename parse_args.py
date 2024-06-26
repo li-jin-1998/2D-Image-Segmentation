@@ -73,10 +73,10 @@ def parse_args():
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch_size", default=64, type=int)
-    parser.add_argument("--epochs", default=200, type=int, metavar="N",
+    parser.add_argument("--epochs", default=300, type=int, metavar="N",
                         help="number of total epochs to train")
     # Optimizer options
-    parser.add_argument('--lr', default=5e-4, type=float, help='initial learning rate')
+    parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
     parser.add_argument('--resume', default=0, type=int, help='resume from checkpoint')
     parser.add_argument('--deep_supervision', default=0, help='deep supervision training')
     parser.add_argument('--multi_scale', default=0, help='multi-scale training')
