@@ -35,10 +35,10 @@ def predict_gray():
     # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/01_待标注/00_种植/bug补充数据/20240620/*/*Image*.png")[::2]
     # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/01_待标注/00_种植/bug补充数据/20240624/*/*origin.png")[::]
     # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/fangqi/AS connect内部下载数据/种植杆数据/scan转化ok/240612880005424699264/*")[::2]
-    predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_test/*")[::5]
+    # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/implant_test/*")[::5]
     # predict_image_names = glob.glob("/mnt/algo-storage-server/Workspaces/lijin/images/*")[::5]
     # predict_image_names = glob.glob(r"/home/lj/PycharmProjects/Data/checked/*].png")
-    # predict_image_names = glob.glob(args.data_path + "/augmentation_test/image/*.*")[::20]
+    predict_image_names = glob.glob(args.data_path + "/test/image/*")[::5]
     predict_image_names.sort()
     result_path = './visualization'
     if os.path.exists(result_path):
@@ -78,7 +78,7 @@ def predict_gray():
             cv2.imwrite(dst, predict_result)
             shutil.copy(str(img_path), dst.replace('predict', 'image'))
 
-            if 'IMAGE' in img_path:
+            if 'Image' in img_path:
                 origin_mask = str(img_path).replace('image/', 'mask/').replace("IMAGE", "MASK")
                 if os.path.exists(origin_mask):
                     shutil.copy(origin_mask, dst.replace('predict', 'mask'))

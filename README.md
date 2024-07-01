@@ -51,6 +51,8 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 
 - **[SGNet](https://github.com/LinZhuoChen/SGNet)**
 
+- **[RepNeXt](https://github.com/suous/RepNeXt)**
+
 ### Paper with code
 
 - **[Semantic Segmentation on NYU Depth v2](https://paperswithcode.com/sota/semantic-segmentation-on-nyu-depth-v2?tag_filter=0)**
