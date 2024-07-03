@@ -8,6 +8,9 @@ from torch import Tensor
 from torchvision import ops
 from torchvision.models import efficientnet
 
+from network.PSAM import PSAModule
+from network.RepNeXt import ChunkConv
+
 
 class IntermediateLayerGetter(nn.ModuleDict):
     _version = 2
@@ -96,18 +99,22 @@ class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock, self).__init__()
 
-        middle_channels = int(in_channels * 2)
-
+        middle_channels = int(in_channels // 2)
+        # self.conv1 = ChunkConv(in_channels)
+        # self.up = UpConv(in_channels, middle_channels)
         self.conv1 = Conv(in_channels, middle_channels, kernel_size=3, dilation=1)
         self.up = UpConv(middle_channels, middle_channels)
+        # self.conv2 = ChunkConv(out_channels)
         self.conv2 = Conv(middle_channels, out_channels, kernel_size=3, dilation=1)
-
+        self.chunk_conv = ChunkConv(out_channels)
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
 
     def forward(self, x, y):
         x = self.conv1(x)
         x = self.up(x)
         x = self.conv2(x)
+
+        y = self.chunk_conv(y)
 
         x = torch.cat([y, x], dim=1)
         x = self.drop(x)
@@ -118,12 +125,12 @@ class DecoderBlock2(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock2, self).__init__()
 
-        middle_channels = int(out_channels*4)
+        middle_channels = int(out_channels * 4)
 
         self.up = UpConv(in_channels, out_channels)
 
         self.conv1 = Conv(out_channels * 2, middle_channels, kernel_size=3, dilation=1)
-        self.conv2 = Conv(middle_channels, out_channels*2, kernel_size=3, dilation=1)
+        self.conv2 = Conv(middle_channels, out_channels * 2, kernel_size=3, dilation=1)
 
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=False)
 
@@ -151,6 +158,9 @@ class EfficientUNet(nn.Module):
         elif model_name == 'efficientnet_b2':
             backbone = efficientnet.efficientnet_b2(pretrained=pretrain_backbone)
             self.stage_out_channels = [16, 24, 48, 120, 352]
+        elif model_name == 'efficientnet_b3':
+            backbone = efficientnet.efficientnet_b3(pretrained=pretrain_backbone)
+            self.stage_out_channels = [24, 32, 48, 136, 384]
         elif model_name == 'efficientnet_v2_s':
             backbone = efficientnet.efficientnet_v2_s(pretrained=pretrain_backbone)
             self.stage_out_channels = [24, 48, 64, 160, 1280]
@@ -178,13 +188,12 @@ class EfficientUNet(nn.Module):
             self.auxiliary2 = nn.Conv2d(self.stage_out_channels[2] * 2, num_classes, kernel_size=1)
             self.auxiliary3 = nn.Conv2d(self.stage_out_channels[3] * 2, num_classes, kernel_size=1)
 
-        from network.PSAM import PSAModule, PPM
         self.PSAM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
+        # self.chunk_conv = ChunkConv(self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         if self.is_convert_onnx:
-
             x = x.permute(0, 3, 1, 2)  # rgb
         backbone_out = self.backbone(x)
         # for i in range(5):
@@ -198,6 +207,7 @@ class EfficientUNet(nn.Module):
 
         # center
         e4 = self.PSAM(e4)
+        # e4 = self.chunk_conv(e4)
         # e4 = self.PPM(e4)
 
         # decoder
