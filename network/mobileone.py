@@ -421,8 +421,11 @@ def reparameterize_model(model: torch.nn.Module) -> nn.Module:
             module.reparameterize()
     return model
 
+
 if __name__ == '__main__':
     from torchsummary import summary
 
-    model = mobileone(num_classes=3)
+    model = mobileone(variant='s1', num_classes=3, inference_mode=False)
+
+    # model = reparameterize_model(model)
     summary(model, (3, 224, 224))

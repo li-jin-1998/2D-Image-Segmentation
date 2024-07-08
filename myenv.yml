@@ -1,4 +1,4 @@
-name: lj_py
+name: pointcloud
 channels:
   - pytorch
   - nvidia
@@ -244,4 +244,4 @@ dependencies:
       - vtk==9.3.0
       - webencodings==0.5.1
       - werkzeug==3.0.3
-prefix: /home/lj/anaconda3/envs/lj_py
+prefix: /home/lj/anaconda3/envs/pointcloud

@@ -37,6 +37,10 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 - **[RepNeXt](https://github.com/suous/RepNeXt)**
 - **[MobileOne(official)](https://github.com/apple/ml-mobileone)**
 - **[MobileOne(unofficial)](https://github.com/shoutOutYangJie/MobileOne)**
+- **[SegNeXt(official)](https://github.com/Visual-Attention-Network/SegNeXt)**
+- **[SegNeXt(unofficial)](https://github.com/Mr-TalhaIlyas/SegNext)**
+- **[fastvit(official)](https://github.com/apple/ml-fastvit)**
+- **[RepLKNet(official)](https://github.com/DingXiaoH/RepLKNet-pytorch)**
 
 ### RGB-D
 
@@ -46,6 +50,7 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 - **[ESANet](https://github.com/TUI-NICR/ESANet)**
 - **[3D-SIS](https://github.com/Sekunde/3D-SIS)**
 - **[SGNet](https://github.com/LinZhuoChen/SGNet)**
+- **[CalibNet](https://github.com/PJLallen/CalibNet)**
 
 ### Paper with code
 
@@ -58,4 +63,5 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 - **[torch-cam](https://github.com/frgfm/torch-cam)**
 - **[torch-scan](https://github.com/frgfm/torch-scan)**
 - **[Holocron](https://github.com/frgfm/Holocron)**
+- **[detectron2](https://github.com/facebookresearch/detectron2)**
 
