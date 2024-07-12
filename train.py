@@ -1,4 +1,5 @@
 import datetime
+import math
 import os
 import time
 
@@ -26,10 +27,10 @@ def train():
 
     # train_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_train'))
     # val_dataset = MyDatasetNpy(os.path.join(args.data_path, 'augmentation_test'))
-    train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
-    val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
-    # train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
-    # val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
+    # train_dataset = MyDataset(os.path.join(args.data_path, 'train'), args.image_size)
+    # val_dataset = MyDataset(os.path.join(args.data_path, 'test'), args.image_size)
+    train_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_train'), args.image_size)
+    val_dataset = MyDataset(os.path.join(args.data_path, 'augmentation_test'), args.image_size)
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
     train_loader = DataLoader(train_dataset,
@@ -55,13 +56,17 @@ def train():
     # exit(0)
     params_to_optimize = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(params_to_optimize, lr=args.lr, weight_decay=1e-2)
+    # optimizer = torch.optim.Adamax(params_to_optimize, lr=args.lr)
     # optimizer = torch.optim.SGD(params_to_optimize, lr=args.lr, momentum=0.9, weight_decay=1e-4)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
     # 创建学习率更新策略，这里是每个step更新一次(不是每个epoch)
     # lr_scheduler = create_lr_scheduler(optimizer, len(train_loader), args.epochs, warmup=False, warmup_epochs=1)
-    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, last_epoch=-1, gamma=0.99, verbose=True)
+    # lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, last_epoch=-1, gamma=0.99, verbose=True)
+
+    lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf  # cosine
+    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf, verbose=True)
 
     if args.multi_scale:
         weights_path = get_latest_weight_path(args)

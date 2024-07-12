@@ -11,7 +11,10 @@ from utils.loss import build_target
 mse_loss = MSELoss(size_average=True)
 kl_loss = KLDivLoss(size_average=True)
 l1_loss = L1Loss(size_average=True)
-ce_loss = CrossEntropyLoss(size_average=True, label_smoothing=0.1)
+
+loss_weight=None
+# loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
+ce_loss = CrossEntropyLoss(size_average=True, weight=loss_weight, label_smoothing=0.1)
 
 
 def criterion(inputs, target, num_classes: int = 3):
@@ -19,9 +22,9 @@ def criterion(inputs, target, num_classes: int = 3):
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
     target = build_target(target, num_classes)
-    # loss_weight = torch.as_tensor([1, 2, 1, 1, 1], device="cuda")
+    # loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
     for name, x in inputs.items():
-        a = 0.
+        # a = 0.
         losses[name] = ce_loss(x, target)
         # losses[name] = cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
         # losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)

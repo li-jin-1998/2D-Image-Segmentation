@@ -393,6 +393,7 @@ if __name__ == "__main__":
     from torchsummary import summary
 
     model = create_model("repnext_m3")
+    # model.eval()
     summary(model, (3, 224, 224))
     #
     # model.eval()
