@@ -20,6 +20,8 @@ class Spatial_Embeddings(nn.Module):
         img_size = _pair(img_size)
         patch_size = _pair(patchsize)
         n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])//4
+        # UDTransNet
+        # n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])
         # print(n_patches, patch_size, config.transformer["embedding_channels"])
         self.patch_embeddings = Conv2d(in_channels=in_channels,
                                        out_channels=config.transformer["embedding_channels"],
@@ -33,7 +35,7 @@ class Spatial_Embeddings(nn.Module):
         x = self.patch_embeddings(x)  # (B, hidden. n_patches^(1/2), n_patches^(1/2))
         x = x.flatten(2)
         x = x.transpose(-1, -2)  # (B, n_patches, hidden)
-        # print(x.shape)
+        # print(x.shape, self.position_embeddings.shape)
         embeddings = x + self.position_embeddings
         return embeddings
 

@@ -58,20 +58,6 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.image_paths)
 
-
-def compute_weights(masks_path):
-    # calculate the weights of different classes based on train samples
-    masks = np.load(masks_path)
-    sum_0 = (np.sum(masks == 0))
-    sum_1 = (np.sum(masks == 1))
-    sum_2 = (np.sum(masks == 2))
-    print(sum_0, " ", sum_1, " ", sum_2)
-    sum_total = sum_0 + sum_1 + sum_2
-    weights_list = [(1 / sum_0) * sum_total / 2.0, (1 / sum_1) * sum_total / 2.0,
-                    (1 / sum_2) * sum_total / 2.0]
-    print('Weights for different classes are:', weights_list)
-
-
 def plot_data_loader_image(data_loader):
     plot_num = data_loader.batch_size
 

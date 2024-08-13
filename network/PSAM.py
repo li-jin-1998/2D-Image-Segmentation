@@ -111,6 +111,8 @@ class PSAModule(nn.Module):
                            stride=stride, groups=conv_groups[2])
         self.conv_4 = conv(inplanes, planes // 4, kernel_size=3, padding=9 // 2, dilation=4,
                            stride=stride, groups=conv_groups[3])
+        # conv_kernels = [3, 5, 7, 9]
+        # conv_groups = [1, 4, 8, 16]
         # self.conv_1 = conv(inplanes, planes // 4, kernel_size=conv_kernels[0], padding=conv_kernels[0] // 2,
         #                    stride=stride, groups=conv_groups[0])
         # self.conv_2 = conv(inplanes, planes // 4, kernel_size=conv_kernels[1], padding=conv_kernels[1] // 2,

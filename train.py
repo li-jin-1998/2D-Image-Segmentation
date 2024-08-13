@@ -75,6 +75,8 @@ def train():
 
     if args.resume and not args.multi_scale:
         weights_path = get_best_weight_path(args)
+        if not os.path.exists(weights_path):
+            raise FileNotFoundError('not found weights file: {}'.format(weights_path))
         checkpoint = torch.load(weights_path, map_location='cpu')
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])

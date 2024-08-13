@@ -7,7 +7,7 @@ from torchvision.models import efficientnet
 from network.UDTransNet.DAT import DAT
 from network.efficientnet_unet import IntermediateLayerGetter, OutConv
 
-
+# 改进UDTransNet,换backbone
 def get_model_config():
     config = ml_collections.ConfigDict()
     config.transformer = ml_collections.ConfigDict()

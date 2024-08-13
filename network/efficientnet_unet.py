@@ -97,16 +97,16 @@ class UpConv(nn.Module):
 
 class DecoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, p):
+        # print("in_channels:", in_channels, "out_channels:", out_channels)
         super(DecoderBlock, self).__init__()
+        middle_channels = int(in_channels * 2)
 
-        middle_channels = int(in_channels // 2)
-        # self.conv1 = ChunkConv(in_channels)
-        # self.up = UpConv(in_channels, middle_channels)
         self.conv1 = Conv(in_channels, middle_channels, kernel_size=3, dilation=1)
         self.up = UpConv(middle_channels, middle_channels)
-        # self.conv2 = ChunkConv(out_channels)
         self.conv2 = Conv(middle_channels, out_channels, kernel_size=3, dilation=1)
+
         self.chunk_conv = ChunkConv(out_channels)
+
         self.drop = ops.DropBlock2d(p=p, block_size=3, inplace=True)
 
     def forward(self, x, y):
@@ -125,7 +125,7 @@ class DecoderBlock2(nn.Module):
     def __init__(self, in_channels, out_channels, p):
         super(DecoderBlock2, self).__init__()
 
-        middle_channels = int(out_channels * 4)
+        middle_channels = int(out_channels * 1)
 
         self.up = UpConv(in_channels, out_channels)
 
@@ -173,7 +173,7 @@ class EfficientUNet(nn.Module):
         return_layers = dict([(str(j), f"stage{i}") for i, j in enumerate(stage_indices)])
         self.backbone = IntermediateLayerGetter(backbone.features, return_layers=return_layers)
         drop = [0.2, 0.2, 0.2, 0.2]
-        print(f"drop : {drop}, convert onnx : {is_convert_onnx}")
+        print(f"drop : {drop}, convert onnx : {is_convert_onnx}, deep_supervision : {deep_supervision}")
         self.up1 = DecoderBlock(self.stage_out_channels[4], self.stage_out_channels[3], drop[0])
         self.up2 = DecoderBlock(self.stage_out_channels[3] * 2, self.stage_out_channels[2], drop[1])
         self.up3 = DecoderBlock(self.stage_out_channels[2] * 2, self.stage_out_channels[1], drop[2])
@@ -189,7 +189,6 @@ class EfficientUNet(nn.Module):
             self.auxiliary3 = nn.Conv2d(self.stage_out_channels[3] * 2, num_classes, kernel_size=1)
 
         self.PSAM = PSAModule(self.stage_out_channels[4], self.stage_out_channels[4])
-        # self.chunk_conv = ChunkConv(self.stage_out_channels[4])
         # self.PPM = PPM(self.stage_out_channels[4], self.stage_out_channels[4] // 4, [2, 3, 5, 6])
 
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
@@ -207,7 +206,6 @@ class EfficientUNet(nn.Module):
 
         # center
         e4 = self.PSAM(e4)
-        # e4 = self.chunk_conv(e4)
         # e4 = self.PPM(e4)
 
         # decoder
@@ -236,6 +234,6 @@ class EfficientUNet(nn.Module):
 if __name__ == '__main__':
     from torchsummary import summary
 
-    model = EfficientUNet(num_classes=3, pretrain_backbone=True,
-                          model_name='efficientnet_b1', deep_supervision=True).to("cuda")
+    model = EfficientUNet(num_classes=5, pretrain_backbone=True,
+                          model_name='efficientnet_b2', deep_supervision=True).to("cuda")
     summary(model, (3, 224, 224))

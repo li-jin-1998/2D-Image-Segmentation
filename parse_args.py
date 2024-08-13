@@ -65,11 +65,10 @@ def get_model(args, is_convert_onnx=False):
 def parse_args():
     parser = argparse.ArgumentParser(description="pytorch training")
     parser.add_argument('--arch', '-a', metavar='ARCH', default='efficientnet_b1',
-                        help='unet/mobilenet/efficientnet/efficientnet_v2_s/UDTransNet')
-    # parser.add_argument("--data_path", default="/mnt/algo-storage-server/UNet/Dataset14/data", help="root")
-    parser.add_argument("--data_path", default="/home/lj/PycharmProjects/2D-Image-Segmentation/dataset/data",
+                        help='unet/mobilenet/efficientnet_b1/efficientnet_v2_s/UDTransNet/ETransUNet')
+    parser.add_argument("--data_path", default="/mnt/local_storage/lijin/Segmentation/dataset/data",
                         help="root")
-    parser.add_argument("--num_classes", default=5, type=int)
+    parser.add_argument("--num_classes", default=6, type=int)
     parser.add_argument("--image_size", default=224, type=int)
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch_size", default=64, type=int)
@@ -78,7 +77,7 @@ def parse_args():
     # Optimizer options
     parser.add_argument('--lr', default=1e-3, type=float, help='initial learning rate')
     parser.add_argument('--lrf', type=float, default=0.01)
-    parser.add_argument('--resume', default=1, type=int, help='resume from checkpoint')
+    parser.add_argument('--resume', default=0, type=int, help='resume from checkpoint')
     parser.add_argument('--deep_supervision', default=0, help='deep supervision training')
     parser.add_argument('--multi_scale', default=0, help='multi-scale training')
     parser.add_argument('--start_epoch', default=1, type=int, metavar='N',

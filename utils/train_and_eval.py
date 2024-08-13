@@ -12,8 +12,8 @@ mse_loss = MSELoss(size_average=True)
 kl_loss = KLDivLoss(size_average=True)
 l1_loss = L1Loss(size_average=True)
 
-loss_weight=None
-# loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
+loss_weight = None
+# loss_weight = torch.as_tensor([1, 2, 2, 2, 1, 2], device="cuda")
 ce_loss = CrossEntropyLoss(size_average=True, weight=loss_weight, label_smoothing=0.1)
 
 
