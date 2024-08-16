@@ -137,6 +137,8 @@ if __name__ == '__main__':
     ids2 = ['20231105142801', '20231204111852', '20240116133815', '20240329092513',
             '20240329100520', '20240329103029', '20240329103649', '20240329110428']
 
+
+
     file_name = '2024Q1第二批'
     file_name2 = '2024Q1'
 
@@ -147,7 +149,12 @@ if __name__ == '__main__':
     # for test_id in ids:
     #     test_one(file_name, test_id)
 
-    for test_id in ids2:
-        test_one(file_name2, test_id)
+    # for test_id in ids2:
+    #     test_one(file_name2, test_id)
+
+    file_name3 = '2023Q1'
+    ids3 = os.listdir(r"/mnt/algo-storage-server/Dataset/2D/外部收集/01_修复/{}".format(file_name3))
+    for test_id in ids3:
+        test_one(file_name3, test_id)
 
     # test_one_file()

@@ -65,3 +65,10 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple package-name
 - **[Holocron](https://github.com/frgfm/Holocron)**
 - **[detectron2](https://github.com/facebookresearch/detectron2)**
 
+### Loss
+- **[从loss处理图像分割中类别极度不均衡的状况---keras](https://blog.csdn.net/m0_37477175/article/details/83004746)**
+- **[LovaszSoftmax](https://github.com/bermanmaxim/LovaszSoftmax)**
+- **[pytorch-loss](https://github.com/CoinCheung/pytorch-loss)**
+
+### Post-processing
+- **[superpixPool](https://github.com/bermanmaxim/superpixPool)**

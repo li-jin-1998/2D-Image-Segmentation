@@ -33,6 +33,6 @@ def pre_process(image_path, mask_path, image_size):
     mask[mask == 129.0] = 2.0
     mask[mask == 192.0] = 3.0
     mask[mask == 255.0] = 4.0
-    mask[mask == 32.0] = 5.0
+    mask[mask == 32.0] = 4.0
 
     return image, mask

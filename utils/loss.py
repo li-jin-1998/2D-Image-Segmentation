@@ -10,7 +10,7 @@ def build_target(target: torch.Tensor, num_classes: int = 2, ignore_index: int =
         ignore_mask = torch.eq(target, ignore_index)
         dice_target[ignore_mask] = 0
         # [N, H, W] -> [N, H, W, C]
-        dice_target = nn.functional.one_hot(dice_target, num_classes).float()
+        dice_target = nn.functional.one_hot(dice_target.to(torch.int64), num_classes).float()
         dice_target[ignore_mask] = ignore_index
     else:
         dice_target = nn.functional.one_hot(dice_target.to(torch.int64), num_classes).float()

@@ -4,31 +4,35 @@ import numpy as np
 import torch
 import tqdm
 from torch.nn import KLDivLoss, MSELoss, L1Loss, CrossEntropyLoss
+from torch.nn.functional import cross_entropy
 
 import utils.distributed_utils as utils
 from utils.loss import build_target
+from utils.tversky_loss import TverskyLoss
 
 mse_loss = MSELoss(size_average=True)
 kl_loss = KLDivLoss(size_average=True)
 l1_loss = L1Loss(size_average=True)
 
-loss_weight = None
-# loss_weight = torch.as_tensor([1, 2, 2, 2, 1, 2], device="cuda")
+# loss_weight = None
+loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
 ce_loss = CrossEntropyLoss(size_average=True, weight=loss_weight, label_smoothing=0.1)
+
+tversky_loss = TverskyLoss()
 
 
 def criterion(inputs, target, num_classes: int = 3):
     losses = {}
     if not isinstance(inputs, dict):
         inputs = {'out': inputs}
-    target = build_target(target, num_classes)
+    target = build_target(target, num_classes, ignore_index=-1)
     # loss_weight = torch.as_tensor([1, 2, 2, 2, 1], device="cuda")
     for name, x in inputs.items():
-        # a = 0.
-        losses[name] = ce_loss(x, target)
+        a = 0.3
+        # losses[name] = tversky_loss(x, target)
         # losses[name] = cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
-        # losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
-        # + a * dice_loss(x, target, multiclass=True)
+        losses[name] = (1 - a) * cross_entropy(x, target, weight=loss_weight, label_smoothing=0.1)
+        + a * tversky_loss(x, target)
         # Flooding
         # loss = (loss - b).abs() + b
     total_loss = losses['out']
