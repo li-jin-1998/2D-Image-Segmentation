@@ -152,9 +152,9 @@ if __name__ == '__main__':
     # for test_id in ids2:
     #     test_one(file_name2, test_id)
 
-    file_name3 = '2023Q1'
-    ids3 = os.listdir(r"/mnt/algo-storage-server/Dataset/2D/外部收集/01_修复/{}".format(file_name3))
-    for test_id in ids3:
-        test_one(file_name3, test_id)
+    # file_name3 = '2023Q1'
+    # ids3 = os.listdir(r"/mnt/algo-storage-server/Dataset/2D/外部收集/01_修复/{}".format(file_name3))
+    # for test_id in ids3:
+    #     test_one(file_name3, test_id)
 
-    # test_one_file()
+    test_one_file()
